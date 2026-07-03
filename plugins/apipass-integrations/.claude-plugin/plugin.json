@@ -1,0 +1,22 @@
+{
+  "name": "apipass-integrations",
+  "version": "0.14.0",
+  "description": "Construa, execute e valide integracoes da APIPASS em linguagem natural. Pesquise acoes, configure autenticacao e analise logs de execucao sem sair do seu IDE com IA.",
+  "author": {
+    "name": "APIPASS",
+    "email": "suporte@apipass.com.br"
+  },
+  "homepage": "https://apipass.com.br",
+  "repository": "https://github.com/APIPASS-Integrations/apipass-plugins",
+  "license": "Apache-2.0",
+  "keywords": [
+    "apipass",
+    "integracao",
+    "api",
+    "automacao",
+    "iPaaS",
+    "mcp",
+    "conectores",
+    "keycloak"
+  ]
+}

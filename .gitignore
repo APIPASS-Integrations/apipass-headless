@@ -1,0 +1,17 @@
+# IDE
+.idea/
+.vscode/
+
+# Local Claude Code settings (personal, do not commit)
+.claude/settings.local.json
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+plugins/*.zip
+
+# OS
+Thumbs.db
+.DS_Store

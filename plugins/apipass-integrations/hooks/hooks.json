@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__.*apipass__(publish_flow|unpublish_flow|run_test_flow)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/confirm-publish.js\""
+          }
+        ]
+      }
+    ]
+  }
+}

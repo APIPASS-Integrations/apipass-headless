@@ -1,0 +1,35 @@
+{
+  "name": "apipass-plugins",
+  "owner": {
+    "name": "APIPASS",
+    "email": "suporte@apipass.com.br"
+  },
+  "metadata": {
+    "description": "Plugins oficiais da APIPASS para Claude Code — skills, subagentes, hooks e servidor MCP para operar a plataforma de integracao/API (iPaaS) em linguagem natural.",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "apipass-integrations",
+      "source": "./plugins/apipass-integrations",
+      "description": "Construa, execute e valide integracoes da APIPASS em linguagem natural. Pesquise endpoints, configure autenticacao e teste fluxos sem sair do seu IDE com IA.",
+      "version": "0.14.0",
+      "author": {
+        "name": "APIPASS"
+      },
+      "homepage": "https://apipass.com.br",
+      "repository": "https://github.com/APIPASS-Integrations/apipass-plugins",
+      "license": "Apache-2.0",
+      "keywords": [
+        "apipass",
+        "integracao",
+        "api",
+        "automacao",
+        "iPaaS",
+        "mcp",
+        "workflow",
+        "conectores"
+      ]
+    }
+  ]
+}

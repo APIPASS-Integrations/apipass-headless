@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "apipass": {
+      "type": "http",
+      "url": "https://elb.apipass.com.br/mcp"
+    }
+  }
+}

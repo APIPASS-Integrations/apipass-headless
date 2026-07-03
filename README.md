@@ -74,5 +74,45 @@ Analise e manutencao:
 Conta:
 - `/apipass-integrations:set-account` — informar a conta (realm) no login
 
+## Como contribuir
+Contribuicoes sao bem-vindas — desde reportar um problema ate propor uma nova skill.
+
+### Reportar bugs e sugerir melhorias
+Abra uma [issue](https://github.com/APIPASS-Integrations/apipass-plugins/issues) descrevendo o que aconteceu (ou o que voce gostaria). Para bugs, inclua o comando/pedido que usou, o que esperava e o que ocorreu.
+
+### Enviar mudancas
+1. Faca um fork do repositorio e crie uma branch a partir da `main` (ex. `feat/minha-skill`, `fix/descricao-curta`).
+2. Faca as alteracoes seguindo a estrutura e as convencoes abaixo.
+3. Teste localmente (veja adiante).
+4. Abra um Pull Request para a `main` descrevendo a mudanca e o motivo.
+
+### Estrutura do repositorio
+```
+.claude-plugin/marketplace.json          # catalogo do marketplace (nome, versao, descricao)
+plugins/apipass-integrations/
+  .claude-plugin/plugin.json             # manifesto do plugin (versao, metadados)
+  .mcp.json                              # servidor MCP hospedado que o plugin usa
+  skills/<nome>/SKILL.md                 # comandos /apipass-integrations:<nome>
+  agents/<nome>.md                       # subagentes especializados
+  hooks/hooks.json + *.js                # gates de confirmacao (PreToolUse)
+```
+
+### Convencoes
+- **Idioma:** skills, agentes e documentacao em portugues (pt-BR), como o restante do plugin.
+- **Skills:** cada skill vive em `skills/<nome>/SKILL.md` com frontmatter (`name`, `description`). A `description` e o que faz o Claude decidir quando carregar a skill — seja especifico.
+- **Versao:** ao mudar o comportamento do plugin, incremente a `version` em **`plugin.json` e `marketplace.json`** (os dois devem ficar iguais) e adicione uma entrada no [CHANGELOG.md](CHANGELOG.md).
+- **Nunca** embuta credenciais, tokens ou URLs internas no codigo ou na documentacao.
+
+### Testar localmente
+Aponte o Claude Code para a sua copia local em vez do repositorio remoto:
+
+```
+/plugin marketplace add /caminho/para/apipass-plugins
+/plugin install apipass-integrations@apipass-plugins
+/reload-plugins
+```
+
+Depois de editar uma skill, agente ou hook, rode `/reload-plugins` para recarregar sem reinstalar.
+
 ## Suporte
 Problemas de login (`invalid redirect_uri`, `client not found`) sao de cadastro do client no Keycloak; 401/403 vem do gateway. Fale com o time de plataforma.

@@ -1,8 +1,10 @@
-# APIPASS para Claude Code
+# APIPASS Headless para Claude Code
 
-Construa, publique, teste e investigue integracoes da APIPASS em linguagem natural, dentro do Claude Code. O plugin `apipass-integrations` conecta o Claude ao servidor MCP hospedado da APIPASS — voce descreve o que quer e ele planeja, monta, valida e executa, falando com a plataforma como voce.
+**APIPASS Headless** é operar a plataforma APIPASS **sem a interface grafica** — em linguagem natural, por meio de assistentes de IA. Este repositorio traz a primeira integracao: o plugin oficial `apipass-integrations` para o [Claude Code](https://claude.com/claude-code).
 
-Este repositorio e um **marketplace de plugins para o [Claude Code](https://claude.com/claude-code)**. O plugin `apipass-integrations` e composto por:
+Construa, publique, teste e investigue integracoes da APIPASS conversando com o Claude — voce descreve o que quer e ele planeja, monta, valida e executa, falando com a plataforma (via servidor MCP hospedado) como voce.
+
+Este repositorio e um **marketplace de plugins para o Claude Code**. O plugin `apipass-integrations` e composto por:
 
 - **Skills** (comandos `/apipass-integrations:*`) — construir fluxos, pesquisar acoes, criar custom actions, revisar, documentar e analisar consumo.
 - **Subagentes** especializados — pesquisa de acoes do catalogo e autoria de custom actions em sessao isolada.

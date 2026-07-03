@@ -5,7 +5,7 @@
     "email": "suporte@apipass.com.br"
   },
   "metadata": {
-    "description": "Plugins oficiais da APIPASS para Claude Code — skills, subagentes, hooks e servidor MCP para operar a plataforma de integracao/API (iPaaS) em linguagem natural.",
+    "description": "APIPASS Headless — opere a plataforma APIPASS (iPaaS) sem a interface, em linguagem natural. Plugins oficiais para Claude Code: skills, subagentes, hooks e servidor MCP.",
     "pluginRoot": "./plugins"
   },
   "plugins": [

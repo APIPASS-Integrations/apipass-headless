@@ -4,7 +4,7 @@ description: |
   Gerar documentacao de integracoes (Word/PDF) a partir dos fluxos de um projeto APIPASS.
   Use quando o usuario pedir "documente os fluxos do projeto X", "gere a documentacao de
   integracao", "PDF dos fluxos do cliente Y", "documento tecnico das integracoes",
-  "gerador de documentacao".
+  "gerador de documentacao", "documento ABNT", "documento tecnico-funcional".
 disable-model-invocation: false
 argument-hint: "[nome-do-projeto]"
 ---
@@ -92,6 +92,85 @@ Microsoft Word via COM:
 $w = New-Object -ComObject Word.Application; $w.Visible=$false
 $d = $w.Documents.Open($docx,$false,$true); $d.SaveAs([ref]$pdf,[ref]17); $d.Close($false); $w.Quit()
 ```
+
+### 6.1 Formatacao ABNT NBR 14724 (padrao para clientes brasileiros)
+
+Quando o usuario pedir documento no padrao ABNT ou documento tecnico-funcional formal,
+aplique as seguintes configuracoes no script docx-js:
+
+**Pagina A4 e margens:**
+```javascript
+// 1 cm = 567 DXA | A4 = 11906 x 16838 DXA
+// Largura util = 11906 - 1701 - 1134 = 9071 DXA
+page: { size: { width: 11906, height: 16838 },
+        margin: { top: 1701, right: 1134, bottom: 1134, left: 1701 } }
+//              superior 3 cm   direita 2 cm  inferior 2 cm  esquerda 3 cm
+```
+
+**Fonte e espacamento:**
+```javascript
+// Corpo: Arial 12pt (size: 24), espacamento 1,5, recuo 1a linha 1,25 cm
+const LS15 = { line: 360, lineRule: "auto" };
+spacing: { ...LS15, before: 0, after: 0 }
+indent: { firstLine: 709 }           // 1,25 cm
+alignment: AlignmentType.JUSTIFIED
+```
+
+**Hierarquia de titulos:**
+```javascript
+// Nivel 1 — MAIUSCULO + negrito (ABNT primario)
+children: [run(num + "  " + text.toUpperCase(), { size: 24, bold: true })]
+spacing: { line: 360, lineRule: "auto", before: 480, after: 120 }
+
+// Nivel 2 — negrito (ABNT secundario)
+children: [run(num + "  " + text, { size: 24, bold: true })]
+spacing: { line: 360, lineRule: "auto", before: 360, after: 80 }
+
+// Nivel 3 — negrito italico (ABNT terciario)
+children: [run(num + "  " + text, { size: 24, bold: true, italic: true })]
+```
+
+**Tabelas e figuras:**
+```javascript
+// Legenda de tabela: ACIMA, alinhada a esquerda, tamanho 10pt
+"Tabela N – Titulo da tabela"      // antes do tbl()
+"Fonte: Elaborado pelos autores (2026)."  // apos o tbl(), italico
+
+// Legenda de figura: ABAIXO, centralizada, tamanho 10pt
+"Figura N – Titulo da figura"      // apos a imagem
+"Fonte: Elaborado pelos autores (2026)."
+```
+
+**Numeracao de paginas — canto superior direito (nao rodape):**
+```javascript
+headers: { default: new Header({ children: [new Paragraph({
+  alignment: AlignmentType.RIGHT,
+  children: [new TextRun({ children: [PageNumber.CURRENT], font: "Arial", size: 24 })]
+})]})},
+// Sem footer de numeracao — rodape pode conter info institucional apenas
+```
+
+**Listas sem bullet grafico (ABNT):**
+```javascript
+// Use traco (–) em vez de bullet Unicode ou LevelFormat.BULLET
+indent: { left: 720, hanging: 360 },
+children: [run("– ", ...), run(text, ...)]
+```
+
+**Sumario com pontos (tab leader):**
+```javascript
+new Paragraph({
+  tabStops: [{ type: TabStopType.RIGHT, position: 9071, leader: "dot" }],
+  children: [run(num + "  " + titulo), run("\t" + pagina)]
+})
+```
+
+**Atencao — codificacao no Windows:**
+- Nunca use aspas tipograficas (`"` `"`) em strings JS quando o arquivo for gravado via
+  PowerShell — o PowerShell pode gravar em CP1252 e o Node falha ao parsear.
+- Use aspas ASCII simples `'` ou `"` em todos os literais de string no script JS.
+- Para converter SVG para PNG (embutir diagrama no Word), use o pacote `sharp`:
+  `npm install sharp` → `sharp(svgBuffer).png().toFile('diagram.png')`
 
 ## 7. Diagramas de sequencia (opcional)
 

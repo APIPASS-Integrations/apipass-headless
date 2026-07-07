@@ -1,5 +1,11 @@
 # Changelog — apipass-integrations
 
+## 0.15.0
+### Adicionado
+- **Regra critica de `coreRouteType` em links `nextSteps` para actions.** Documentado que ao apontar um `nextSteps` para um step do tipo `.service.actions.Action` (MEMORY_STORE_SET/GET, PROJECT_STORE_SET/GET, LOGGER, AMS_SEND_MESSAGE, AOS_*, etc.), o objeto de link deve incluir `"coreRouteType"` com o mesmo valor do step de destino — sem esse campo o engine nao consegue resolver a URL do microsservico e a execucao falha com "Method and URL are required, check your flow configuration.", mesmo que o step de destino esteja configurado corretamente. `save_flow_development` e `publish_flow` aceitam o specflow sem reclamar; o erro so aparece em execucao.
+  - `apipass-gotchas`: nova linha na tabela "Construcao de fluxo" com sintoma, causa e correcao.
+  - `apipass-patterns`: nova secao "Regra critica — `nextSteps` para steps de acao" com shape correto do link e aviso sobre comportamento silencioso no save/publish.
+
 ## 0.14.0
 ### Adicionado
 - **Padroes de AMS (filas assincronas) e AOS (Object Store) na skill `apipass-patterns`.** Nova secao AMS: trigger `TriggerAMSConsumeMessage`, step `AMS_SEND_MESSAGE`, convencao de nome de fila com `{{$.stage.name}}-`, `deleteStrategy`, acesso ao payload no subfluxo consumidor. Nova secao AOS: autorizacao `APIPASS_OBJECT_STORE`, convencao database/colecao, shapes completos de `AOS_FIND_ONE_BY_QUERY`/`AOS_UPDATE`/`AOS_INSERT`/`AOS_DELETE`, padrao CRUD GET/POST/PATCH, NodeJS para query `$set`. Skill `build-flow` ganhou uma referencia curta a essas secoes (sem duplicar o conteudo).

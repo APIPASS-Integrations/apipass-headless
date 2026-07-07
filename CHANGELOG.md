@@ -2,7 +2,9 @@
 
 ## 0.15.0
 ### Adicionado
-- **Guidelines ABNT NBR 14724 na skill `document-flows`.** Nova secao 6.1 com valores numericos prontos para uso no docx-js: margens A4 (superior 3 cm, inferior/direita 2 cm, esquerda 3 cm — largura util 9071 DXA), fonte Arial 12pt com espacamento 1,5, hierarquia de titulos (nivel 1 MAIUSCULO+negrito, nivel 2 negrito, nivel 3 negrito italico), legendas de tabela (acima) e figura (abaixo), numeracao de paginas no canto superior direito (header), listas com traco (--) sem bullet grafico, sumario com pontos via TabStopType.RIGHT. Inclui aviso critico sobre encoding CP1252/UTF-8 no Windows/PowerShell e instrucao para converter SVG para PNG com o pacote `sharp`. Gatilhos da skill atualizados com "documento ABNT" e "documento tecnico-funcional".
+- **Regra critica de `coreRouteType` em links `nextSteps` para actions.** Documentado que ao apontar um `nextSteps` para um step do tipo `.service.actions.Action` (MEMORY_STORE_SET/GET, PROJECT_STORE_SET/GET, LOGGER, AMS_SEND_MESSAGE, AOS_*, etc.), o objeto de link deve incluir `"coreRouteType"` com o mesmo valor do step de destino — sem esse campo o engine nao consegue resolver a URL do microsservico e a execucao falha com "Method and URL are required, check your flow configuration.", mesmo que o step de destino esteja configurado corretamente. `save_flow_development` e `publish_flow` aceitam o specflow sem reclamar; o erro so aparece em execucao.
+  - `apipass-gotchas`: nova linha na tabela "Construcao de fluxo" com sintoma, causa e correcao.
+  - `apipass-patterns`: nova secao "Regra critica — `nextSteps` para steps de acao" com shape correto do link e aviso sobre comportamento silencioso no save/publish.
 
 ## 0.14.0
 ### Adicionado

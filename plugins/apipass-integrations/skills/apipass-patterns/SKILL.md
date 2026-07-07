@@ -332,3 +332,24 @@ const queryMongoDB = {
 
 $export(null, { queryMongoDB });
 ```
+
+---
+
+## Regra critica — `nextSteps` para steps de acao (`.service.actions.Action`)
+
+Quando um `nextSteps` aponta para um step cujo `type` e `.service.actions.Action` (MEMORY_STORE, PROJECT_STORE, LOGGER, AMS_SEND_MESSAGE, AOS_*, etc.), o objeto de link **deve** incluir `coreRouteType` com o mesmo valor do step de destino. Sem esse campo o engine nao consegue resolver a URL do microsservico e a execucao falha com "Method and URL are required, check your flow configuration." — mesmo que o step de destino esteja configurado corretamente.
+
+**Shape correto:**
+```json
+"nextSteps": [
+  {
+    "id": "a0",
+    "type": ".service.actions.Action",
+    "sourceUUID": "integration-step-uuid-sourceEndpoint-trigger",
+    "targetUUID": "integration-step-uuid-targetEndpoint-a0",
+    "coreRouteType": "MEMORY_STORE_SET"
+  }
+]
+```
+
+> `save_flow_development` e `publish_flow` aceitam o specflow sem esse campo sem reclamar — o erro so aparece em execucao. Para confirmar o shape correto, leia um fluxo funcional existente com `get_flow_development`.

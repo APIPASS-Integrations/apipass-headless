@@ -1,5 +1,15 @@
 # Changelog — apipass-integrations
 
+## 0.16.0
+### Adicionado
+- **Padrao de diagramas de sequencia SVG->PNG na skill `document-flows`.** A secao 7 foi reescrita com o padrao validado em producao (projeto BMES — Nuvemshop <> Opinoes Verificadas):
+  - Pacote correto para Windows: `@resvg/resvg-js` (substitui `sharp`, que e problematico no Windows). Configuracao obrigatoria: `font: { loadSystemFonts: true }` — sem essa flag o resvg nao encontra fontes e renderiza texto invisivel, quebrando o diagrama visualmente.
+  - Regra de execucao: o script `.js` deve rodar do mesmo diretorio que contem `node_modules/`; rodar de outro diretorio causa MODULE_NOT_FOUND.
+  - Shape do SVG gerado manualmente (swimlane): participantes com caixas azuis, linhas de vida tracejadas, setas horizontais com texto acima, self-messages como loop retangular com texto em italico, faixas de separador (loop/grupo) em azul claro.
+  - Alturas dinamicas por tipo de mensagem: seta normal=44px, self-message=44px, separador=36px — calculadas antes de renderizar para o SVG ter altura exata e nao cortar o conteudo.
+  - Conversao DXA->pixels para `ImageRun`: `dxaToPx(dxa) = Math.round(dxa * 96 / 1440)`. Dimensoes calculadas mantendo proporcao do SVG em relacao a largura util da pagina (9071 DXA para A4 ABNT).
+  - Removida a referencia errada ao pacote `sharp` que constava na secao anterior.
+
 ## 0.15.0
 ### Adicionado
 - **Regra critica de `coreRouteType` em links `nextSteps` para actions.** Documentado que ao apontar um `nextSteps` para um step do tipo `.service.actions.Action` (MEMORY_STORE_SET/GET, PROJECT_STORE_SET/GET, LOGGER, AMS_SEND_MESSAGE, AOS_*, etc.), o objeto de link deve incluir `"coreRouteType"` com o mesmo valor do step de destino — sem esse campo o engine nao consegue resolver a URL do microsservico e a execucao falha com "Method and URL are required, check your flow configuration.", mesmo que o step de destino esteja configurado corretamente. `save_flow_development` e `publish_flow` aceitam o specflow sem reclamar; o erro so aparece em execucao.

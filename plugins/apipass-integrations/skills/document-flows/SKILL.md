@@ -169,14 +169,129 @@ new Paragraph({
 - Nunca use aspas tipograficas (`"` `"`) em strings JS quando o arquivo for gravado via
   PowerShell — o PowerShell pode gravar em CP1252 e o Node falha ao parsear.
 - Use aspas ASCII simples `'` ou `"` em todos os literais de string no script JS.
-- Para converter SVG para PNG (embutir diagrama no Word), use o pacote `sharp`:
-  `npm install sharp` → `sharp(svgBuffer).png().toFile('diagram.png')`
 
 ## 7. Diagramas de sequencia (opcional)
 
-Se o usuario pediu, gere para cada fluxo um diagrama de sequencia (gatilho -> steps ->
-sistemas externos) e embuta no documento via a skill docx (Mermaid renderizado ou imagem).
-Mantenha-o como passo opcional — pule se a resposta foi "nao".
+Se o usuario pediu, gere para cada fluxo um diagrama de sequencia SVG convertido para PNG
+e embutido como imagem no Word via `ImageRun`. Mantenha-o como passo opcional — pule se a
+resposta foi "nao".
+
+### 7.1 Pacote para SVG -> PNG: @resvg/resvg-js
+
+Nao use `sharp` nem `canvas` — ambos sao problematicos no Windows. O pacote correto e
+`@resvg/resvg-js`:
+
+```bash
+# instalar no diretorio de trabalho (onde o script .js sera executado)
+npm install @resvg/resvg-js
+```
+
+**Regra critica:** execute o script Node a partir do MESMO diretorio que contem
+`node_modules/` (onde o `npm install` foi feito). Se rodar de outro diretorio, o
+`require('@resvg/resvg-js')` falha com MODULE_NOT_FOUND.
+
+```javascript
+const { Resvg } = require('@resvg/resvg-js');
+
+function svgToPng(svgString) {
+  const resvg = new Resvg(svgString, {
+    fitTo: { mode: 'width', value: 1200 },  // renderiza em 1200px de largura
+    font: { loadSystemFonts: true },         // OBRIGATORIO — sem isso o texto fica invisivel
+  });
+  return resvg.render().asPng(); // retorna Buffer
+}
+```
+
+> **`loadSystemFonts: true` e obrigatorio.** Com `false` (padrao), o resvg nao encontra
+> nenhuma fonte e renderiza o texto em branco — o diagrama fica visualmente quebrado.
+
+### 7.2 Estrutura do SVG de sequencia
+
+Gere o SVG manualmente (sem dependencia de Mermaid/Puppeteer). O padrao validado:
+
+```javascript
+function gerarSVG(titulo, participantes, mensagens) {
+  const COL_W   = 200;   // largura por participante (px)
+  const LINHA_H = 44;    // espaco vertical entre mensagens normais
+  const SEP_H   = 36;    // espaco para faixas de separador (loop/grupo)
+  const SELF_H  = 44;    // espaco para self-messages (APIPASS -> APIPASS)
+  const TOPO_H  = 90;    // cabecalho (titulo + caixas de participante)
+  const MARGEM  = 20;
+  const N       = participantes.length;
+  const SVG_W   = N * COL_W + 2 * MARGEM;
+
+  // calcula altura dinamicamente por tipo de mensagem
+  let totalH = TOPO_H;
+  mensagens.forEach(m => {
+    if (m.type === 'sep') totalH += SEP_H;
+    else if (m.from === m.to) totalH += SELF_H;
+    else totalH += LINHA_H;
+  });
+  const SVG_H = totalH + 50;
+
+  const cx = (i) => MARGEM + i * COL_W + COL_W / 2;
+  // ... (ver shape completo abaixo)
+}
+```
+
+**Tipos de mensagem no array `mensagens`:**
+- `{ from: 0, to: 2, text: 'GET /orders' }` — seta horizontal entre participantes
+- `{ from: 1, to: 1, text: 'MEMORY_STORE_SET x=1' }` — self-message (loop retangular)
+- `{ type: 'sep', text: 'Loop de paginacao' }` — faixa azul claro de separacao
+
+**Self-message (loop retangular, itálico):**
+```javascript
+const lx = fromX + 24;
+svg += `<path d="M ${fromX} ${y} L ${lx} ${y} L ${lx} ${y+18} L ${fromX} ${y+18}"
+        stroke="#1F3C70" stroke-width="1.5" fill="none"/>
+<polygon points="${fromX},${y+18} ${fromX+7},${y+13} ${fromX+7},${y+23}" fill="#1F3C70"/>
+<text x="${lx+6}" y="${y+13}" font-style="italic" font-size="11" fill="#555">${label}</text>`;
+y += SELF_H;
+```
+
+**Seta normal (texto acima, centralizado):**
+```javascript
+svg += `<line x1="${fromX}" y1="${y}" x2="${toX}" y2="${y}" stroke="#1F3C70" stroke-width="1.5"/>`;
+// ponta da seta conforme direcao (dir > 0: aponta para direita)
+svg += `<text x="${midX}" y="${y-8}" text-anchor="middle" font-size="11">${label}</text>`;
+y += LINHA_H;
+```
+
+**Faixa separadora:**
+```javascript
+svg += `<rect x="${MARGEM}" y="${y-8}" width="${SVG_W-2*MARGEM}" height="26" rx="3" fill="#E3EAF6"/>
+<text x="${MARGEM+10}" y="${y+10}" font-size="11" fill="#1F3C70" font-weight="bold">${label}</text>`;
+y += SEP_H;
+```
+
+### 7.3 Embutir PNG no Word (ImageRun + docx-js)
+
+```javascript
+// converte DXA -> pixels para o ImageRun (96 DPI: 1 inch = 1440 DXA = 96px)
+function dxaToPx(dxa) { return Math.round(dxa * 96 / 1440); }
+
+// calcula dimensoes mantendo proporcao do SVG
+function dimImg(svgStr, targetWdxa) {
+  const w = parseInt(svgStr.match(/width="(\d+)"/)[1]);
+  const h = parseInt(svgStr.match(/height="(\d+)"/)[1]);
+  return { w: targetWdxa, h: Math.round((h / w) * targetWdxa) };
+}
+
+const CWIDTH = 9071; // largura util da pagina A4 ABNT em DXA
+const dim    = dimImg(svgString, CWIDTH);
+const png    = svgToPng(svgString);
+
+new Paragraph({
+  children: [new ImageRun({
+    type: 'png',
+    data: png,
+    transformation: { width: dxaToPx(dim.w), height: dxaToPx(dim.h) },
+    altText: { title: 'Diagrama', description: 'Diagrama de sequencia', name: 'diagrama' },
+  })],
+  alignment: AlignmentType.CENTER,
+  spacing: { before: 80, after: 80 },
+})
+```
 
 ## Observacoes
 

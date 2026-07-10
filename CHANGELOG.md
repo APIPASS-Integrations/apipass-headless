@@ -1,5 +1,10 @@
 # Changelog — apipass-integrations
 
+## 0.16.1
+### Adicionado
+- **`apipass-gotchas`: secao "Fuso horario dos timestamps"** no fluxo de debug de execucao. Documenta que `startTime`/`finishTime` das tools de log vem em UTC, enquanto a UI da plataforma exibe no fuso local da conta — orienta converter antes de reportar horarios ao usuario.
+- **`apipass-gotchas`: secao "Evidencia junto da conclusao"** no fluxo de debug de execucao. Reforca o padrao de comparacao erro vs. sucesso: ao concluir causa raiz, anexar o `read_step_payload` comparativo (request identico, resultado diferente) junto do veredito, em vez de so afirmar a conclusao em prosa.
+
 ## 0.16.0
 ### Adicionado
 - **Padrao de diagramas de sequencia SVG->PNG na skill `document-flows`.** A secao 7 foi reescrita com o padrao validado em producao (projeto BMES — Nuvemshop <> Opinoes Verificadas):

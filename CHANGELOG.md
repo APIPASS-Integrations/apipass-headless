@@ -1,5 +1,15 @@
 # Changelog — apipass-integrations
 
+## 0.17.0
+### Adicionado
+- **Padrao "AF + De-Para" na skill `document-flows`, para analise funcional pre-implementacao.** Nova Secao 0 deixa explicita a escolha entre o Padrao A (consolidado, via MCP, fluxo ja publicado) e o novo Padrao B — usado quando a integracao ainda nao existe na plataforma ou quando o usuario fornece um par de arquivos de referencia (`AF - ....docx` + `de-pra-....xlsx`) para replicar layout/estrutura. Validado numa sessao real de analise funcional (integracao de prontuario LH <-> CELK):
+  - Convencao de nomes `MASTER-REST-.../SUB-...` para fluxos com roteamento (um trigger que decide qual sub-fluxo processar via Call Flow).
+  - Estrutura fixa do `.docx` (AF): capa, secoes I-V numeradas em romano, subsecoes Origem/Destino por fluxo, referencia unica ao de-para ao final da secao IV.
+  - Anexos `.txt` numerados (queries SQL / curls) em vez de conteudo inline, com reaproveitamento entre fluxos e a obrigacao de devolver ao usuario uma tabela "arquivo -> secao onde deve ser anexado".
+  - Estrutura fixa do `.xlsx` de-para (blocos DE'/PARA', banners Origem/Destino, colunas Ref/Campo/Obrigatoriedade/Tipo do campo/Regra) e a regra de que o prefixo da coluna Ref e a inicial do sistema de origem (nao um prefixo generico como "R").
+  - Identidade visual oficial da APIPASS (paleta navy `#222D58`/indigo `#2D2B73`/lime `#D2D81F`, tipografia Montserrat/Arial, logo real extraido do site) e como aplicar o tom de voz da marca sem comprometer a objetividade do conteudo tecnico.
+  - Tecnicas de fallback validadas neste ambiente: extracao de texto/imagens de PDF sem poppler (`pypdf`+Pillow), rasterizacao de SVG via Chrome headless quando `resvg-js`/LibreOffice/Word nao estao disponiveis, descoberta da paleta de cores real de um site via `getComputedStyle`.
+
 ## 0.16.0
 ### Adicionado
 - **Padrao de diagramas de sequencia SVG->PNG na skill `document-flows`.** A secao 7 foi reescrita com o padrao validado em producao (projeto BMES — Nuvemshop <> Opinoes Verificadas):

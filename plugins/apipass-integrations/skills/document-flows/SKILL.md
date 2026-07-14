@@ -1,10 +1,14 @@
 ---
 name: document-flows
 description: |
-  Gerar documentacao de integracoes (Word/PDF) a partir dos fluxos de um projeto APIPASS.
-  Use quando o usuario pedir "documente os fluxos do projeto X", "gere a documentacao de
-  integracao", "PDF dos fluxos do cliente Y", "documento tecnico das integracoes",
-  "gerador de documentacao", "documento ABNT", "documento tecnico-funcional".
+  Gerar documentacao de integracoes (Word/PDF) a partir dos fluxos de um projeto APIPASS, OU
+  transcrever uma analise funcional ja feita (pre-implementacao) no padrao AF + De-Para
+  (planilha separada, linkada). Use quando o usuario pedir "documente os fluxos do projeto X",
+  "gere a documentacao de integracao", "PDF dos fluxos do cliente Y", "documento tecnico das
+  integracoes", "gerador de documentacao", "documento ABNT", "documento tecnico-funcional",
+  "analise funcional", "AF", "planilha de-para", "de x para", "fluxos MASTER/SUB", ou quando
+  anexar um par de arquivos de referencia "AF - ... .docx" + "de-pra-... .xlsx" e pedir para
+  seguir o mesmo padrao.
 disable-model-invocation: false
 argument-hint: "[nome-do-projeto]"
 ---
@@ -22,6 +26,27 @@ CAPA            -> nome APIPASS, projeto/cliente, versao, data, sistemas integra
 2..N. Por fluxo -> descricao + informacoes tecnicas + tabela de etapas
 Final. Tratamento de Erros e Resiliencia
 ```
+
+## 0. Escolher o padrao do documento
+
+Existem **dois padroes** de entregavel, resolvidos por fontes de dado diferentes. Decida antes
+de seguir (pergunte se nao estiver claro):
+
+| Padrao | Quando usar | Fonte dos "steps"/etapas | Entregaveis |
+|---|---|---|---|
+| **A — Consolidado (SAP-style)** | O projeto ja tem fluxo(s) publicados na APIPASS | `list_flows`/`export_flow_json` via MCP (secao 1-6 abaixo) | 1 `.docx` (com PDF opcional) |
+| **B — AF + De-Para (estilo Trizy)** | Analise funcional **pre-implementacao** (fluxo ainda nao existe na plataforma) OU o usuario anexa um par de referencia `AF - ... .docx` + `de-pra-... .xlsx` e pede para replicar o padrao | A analise/documentacao ja levantada na conversa (SQL, curls, regras) — **nao** vem de MCP | 1 `.docx` (AF) + 1 `.xlsx` (De-Para) + N `.txt` de anexo (queries/curls) |
+
+Se o usuario anexar um par de arquivos de referencia (`AF - ...docx` + `de-pra-...xlsx`), va
+direto para a **Secao 8** — nao tente ler fluxos via MCP, o padrao B e autocontido a partir do
+que ja foi analisado/documentado na conversa.
+
+Se nao houver nem fluxo publicado nem arquivos de referencia, pergunte ao usuario qual dos
+dois padroes ele quer.
+
+---
+
+## Padrao A — Documento consolidado via MCP
 
 ## 1. Coletar inputs do usuario
 
@@ -293,12 +318,206 @@ new Paragraph({
 })
 ```
 
+---
+
+## Padrao B — AF + De-Para (estilo Trizy, pre-implementacao)
+
+Use este padrao quando a integracao **ainda nao foi construida na plataforma** — o que existe
+e uma analise funcional (queries SQL, regras de negocio, curls de exemplo, diagramas de
+sequencia) levantada na propria conversa. Diferente do Padrao A, aqui **nao ha MCP**: a fonte
+da verdade e o que ja foi documentado/validado com o usuario e, se fornecido, um par de
+arquivos de referencia (`AF - {Origem} _ {Destino} - {Descricao}.docx` +
+`de-pra-{...}.xlsx`) cujo layout/estrutura deve ser replicado.
+
+### 8.1 Se o usuario anexar um par de referencia
+
+Antes de montar qualquer coisa, **extraia a estrutura real** do par de arquivos (sao ZIPs
+OOXML — nao use o Read tool direto em binario, ele falha). Delegue a um agente Explore
+(somente leitura) ou faca voce mesmo via Bash:
+
+```bash
+unzip -o "arquivo.docx" -d pasta_extraida/     # word/document.xml, word/numbering.xml,
+                                                 # word/styles.xml, word/header*.xml, word/footer*.xml
+```
+
+Para o texto/hierarquia: parseie `word/document.xml` com Python (`xml.etree.ElementTree`) —
+`python-docx` normalmente NAO esta instalado e nao vale a pena instalar so pra isso. Para
+hyperlinks, leia `word/_rels/document.xml.rels` procurando
+`.../relationships/hyperlink`. Extraia do XML, literalmente (nao resuma):
+- A lista completa de titulos/secoes, em ordem, com a numeracao real renderizada (ex. `I.`,
+  `II.`... vem de uma lista numerada em `word/numbering.xml` com `numFmt=upperRoman`, nao de
+  texto literal "1.", "2.").
+- O texto exato de cada frase-padrao (ex. "De X PARA: Abaixo segue o link do arquivo.") para
+  poder reusar o mesmo tom/formato.
+- Onde e como o de-para e referenciado (link, texto-ancora = nome do arquivo).
+
+Para o `.xlsx` (mesma logica, `xl/worksheets/sheetN.xml` + `xl/styles.xml` + `xl/theme/theme1.xml`):
+nome de cada aba, celulas mescladas, cores de fill (`rgb=` literal ou `theme=` indice — se for
+indice, resolva contra `a:clrScheme` do tema), fonte/tamanho/negrito, largura de cada coluna.
+
+> Um agente Explore tem Bash mas **nao tem Write** — se precisar materializar imagens
+> extraidas (ex. `word/media/image1.png`) para inspecionar visualmente, faca isso voce mesmo
+> (fora do Explore) ja que ele so pode ler em memoria.
+
+### 8.2 Estrutura do `.docx` (AF)
+
+```
+[capa em pagina propria — logo, "Analise Funcional", Cliente/Projeto/Fluxo de Processo,
+ tabela Elaborador por / Data e Versao / Apresentado para / Data de Apresentacao]
+I.   Objetivo e sistemas envolvidos       (prosa)
+II.  Foco da integracao                   (prosa + bullet dos processos)
+III. Listagem da integracao               (tabela: Prior.|Fluxo|Volumetria|Disparo|
+                                            Origem|Conectividade|Destino|Conectividade)
+IV.  Regra de negocio                     (uma subsecao A./B./C.../ por fluxo)
+V.   Diagrama de Sequencia                (imagem por fluxo)
+```
+
+Cada subsecao de **IV** segue sempre:
+```
+A. <NOME-DO-FLUXO-EM-MAIUSCULO>
+   i. Explicacao Geral do Processo: <paragrafo>
+   Origem: <Sistema>. <narrativa> + Autorizacao + endpoint(s) + "Exemplo de Chamada:" -> anexo
+   Destino: <Sistema>. <narrativa, incluindo "Aplicar as regras descritas na planilha de
+            De x Para" quando o fluxo transforma campos> + Autorizacao + endpoint(s) +
+            "Exemplo de Chamada:"/"Exemplo de Resposta:" -> anexo(s)
+```
+Ao final de **IV** (uma unica vez, nao por subsecao): `"De X PARA: Abaixo segue o link do
+arquivo."` + o nome do arquivo `.xlsx` como texto-ancora.
+
+**Nomenclatura dos fluxos — convencao MASTER/SUB:** quando ha roteamento (um trigger unico que
+decide qual variante processar, ex. por um campo do payload), modele como:
+- `MASTER-REST-<ACAO>-<ORIGEM>-<DESTINO>` — fluxo trigger, so roteia e repassa a resposta.
+- `SUB-<ACAO>-<VARIANTE>-<ORIGEM>-<DESTINO>` — um por variante, chamado via Call Flow pelo
+  master (a primeira/ultima etapa da tabela do sub-fluxo e "Entrada/Retorno (Call Flow)", nao
+  "Trigger REST").
+
+Um fluxo `MASTER-...` sem variantes (so um trigger direto, sem sub-fluxos) e normal — nem todo
+MASTER tem SUB.
+
+**Nomenclatura de arquivo:** `AF - {Origem} _ {Destino} - {Descricao}.docx` (espaco-hifen-
+espaco antes/depois de "AF", espaco-underscore-espaco entre os sistemas) e
+`de-pra-{mesma descricao}.xlsx` (prefixo `de-pra-`, sem "AF"; os separadores internos podem
+variar — nao ha uma regra rigida observada nos exemplos, use hifen entre termos).
+
+### 8.3 Anexos em `.txt` em vez de conteudo inline
+
+**Nao** embuta SQL/curl/JSON diretamente no corpo do `.docx` — extraia cada query/exemplo de
+chamada para um arquivo `.txt` numerado (mesmo padrao do exemplo de referencia: `01-`, `02-`...
+contínuo pelo documento inteiro, nao reiniciando por fluxo), e no lugar do conteudo deixe so um
+link estilizado (cor de link, sublinhado) com o nome do arquivo como texto.
+
+Convencao de nomenclatura por artefato:
+- `NN-Origem-query-SQL-X.Y-descricao-curta.txt` — query contra o banco do sistema de origem.
+- `NN-Origem-curl-descricao-curta.txt` — exemplo do payload/chamada que o sistema de origem
+  faz PARA a APIPASS (o trigger).
+- `NN-Destino-curl-descricao-curta.txt` — chamada que a APIPASS faz PARA o sistema de destino.
+- `NN-Destino-response-descricao-curta.txt` — exemplo de resposta do destino.
+
+Se uma query/curl e reutilizada por mais de um fluxo (ex. autenticacao OAuth2, ou uma query de
+configuracao consultada por dois sub-fluxos), **nao duplique o arquivo** — referencie o mesmo
+numero de novo, com uma nota "(mesmo arquivo do item X)".
+
+Cada `.txt` leva um comentario de 1 linha no topo dizendo a qual query/secao do doc de origem
+corresponde e em qual fluxo e usado — isso e o que permite ao usuario colar o conteudo no lugar
+certo depois.
+
+**Ao final, sempre devolva ao usuario uma tabela "arquivo -> secao exata onde deve ser
+anexado/linkado"** — e a unica forma de ele saber onde cada `.txt` entra sem reabrir o `.docx`.
+
+### 8.4 Estrutura do `.xlsx` (De-Para)
+
+Uma aba por **conjunto de regras de transformacao** — nao necessariamente 1:1 com os fluxos da
+secao III (dois fluxos podem chamar o mesmo endpoint de destino com regras diferentes = 2
+abas; um fluxo que so faz passthrough sem transformar campo nenhum = 0 abas).
+
+Layout fixo por aba (linhas e colunas fixas, dados a partir da linha 7):
+```
+A1:E2 mesclado = "DE'"            |  G1:K2 mesclado = "PARA'"
+A3    = "Origem"                  |  G3:K3 mesclado = "Destino"
+A4:E5 mesclado = <descricao da origem>  | G4:K5 mesclado = <descricao do destino/endpoint>
+A6=Ref B6=Campo C6=Obrigatoriedade D6="Tipo do campo" E6=Regra   (F vazia, separador)
+G6=Ref H6=Campo I6=Obrigatoriedade J6="Tipo do campo" K6=Regra
+```
+
+**Coluna Ref — regra importante:** o prefixo do codigo de referencia (ex. `L1`, `L2`...) e a
+**inicial do sistema de origem**, nao um prefixo generico como "R" (de "Referencia"). Se o
+sistema de origem for uma sigla de 2+ letras (ex. "LH"), pergunte ao usuario se prefere a sigla
+completa (`LH1, LH2...`) ou so a primeira letra (`L1, L2...`) — ja tivemos os dois casos.
+Quando um campo de destino combina mais de uma referencia de origem, use `"Lx + Ly"` na coluna
+Ref do lado Destino. Campos fixos/calculados em runtime (sem correspondencia na origem) ficam
+com Ref vazio e a explicacao vai na coluna Regra (ex. "FIXO DateTime.Now()").
+
+Gerar com `openpyxl` (Python) — geralmente ja disponivel ou instalavel sem complicacao via
+`pip install openpyxl`. Larguras de coluna assimetricas: a coluna Regra do lado Origem costuma
+ser estreita (~17 unidades), a do lado Destino bem mais larga (~50+), porque a regra de
+transformacao (lado Destino) tende a ser mais descritiva que a nota da query de origem.
+
+### 8.5 Identidade visual APIPASS
+
+Quando o usuario pedir para aplicar a marca APIPASS (nao um layout generico nem o de um cliente
+de referencia como o exemplo Trizy), use os valores abaixo — extraidos do manual de marca
+(`APIPASS - Manual tom de voz.pdf`, se anexado) e de `https://apipass.com.br/` (cores
+computadas via `getComputedStyle`, nao adivinhadas):
+
+**Paleta:**
+| Cor | Hex | Uso |
+|---|---|---|
+| Navy (primaria) | `#222D58` | Logo, botoes/CTAs do site, headers de tabela, banner "Origem" no de-para |
+| Indigo (secundaria) | `#2D2B73` | Titulos de bloco secundarios |
+| Lime (acento, da marca no logo) | `#D2D81F` | Acentos/linhas divisorias, banner "Destino" no de-para (com texto navy, nao branco — lime e claro demais para texto branco) |
+
+**Tipografia:** Montserrat para titulos/headings/botoes (peso 600/bold), Arial para corpo de
+texto — mesma combinacao usada no site.
+
+**Logo:** o SVG real fica em `https://apipass.com.br/wp-content/uploads/2024/01/logo-header.svg`
+(buscavel via `fetch` no browser tool ou `curl`). Rasterize para PNG antes de embutir no
+`.docx` (docx-js so aceita png/jpg/gif/bmp em `ImageRun`, nao svg) — ver 7.1 para o metodo
+`@resvg/resvg-js`; se o pacote nao estiver disponivel/instalavel, uma alternativa que funcionou
+foi abrir o SVG num navegador headless (Chrome `--headless --screenshot`) e capturar o
+resultado.
+
+**Tom de voz:** formal + empatico + objetivo (autoridade e credibilidade, mas humanizado — ex.
+"vamos juntos"). Frase-sintese: "Simplificamos o que e complexo, impulsionando resultados."
+Aplique o tom de voz **apenas nos paragrafos narrativos/conectivos** (capa, abertura das
+secoes I/II/IV, um paragrafo de fechamento) — **nunca** nas descricoes tecnicas (Origem/
+Destino, regras de negocio, nomes de campo/query): o proprio manual de marca elege
+objetividade e ausencia de ambiguidade como pilares do tom, entao reescrever conteudo tecnico
+em "linguagem de marca" iria contra a propria diretriz.
+
+### 8.6 Tecnicas de fallback usadas neste ambiente (Windows, sem poppler/LibreOffice/Word)
+
+- **Ler PDF grande sem `pdftoppm`/poppler:** o Read tool falha se poppler nao estiver
+  instalado. Fallback: `pip install pypdf pillow` e usar `pypdf.PdfReader` para extrair texto
+  pagina a pagina (grave em arquivo UTF-8 em vez de `print()` — o console do Windows quebra em
+  `cp1252` com caracteres especiais) e `page.images` para extrair imagens embutidas (precisa
+  do Pillow instalado, senao da erro `ImportError` especifico).
+- **Rasterizar SVG (logo, diagramas) sem `resvg-js`/LibreOffice/Word:** Chrome headless
+  funciona bem — `chrome.exe --headless --disable-gpu --no-sandbox --screenshot=out.png
+  --window-size=WxH --default-background-color=FFFFFFFF file:///caminho/arquivo.svg`. Escreva
+  o output para a pasta scratchpad primeiro se o diretorio do projeto der "Acesso negado" (o
+  processo do Chrome as vezes nao tem permissao de escrita direta no diretorio do projeto,
+  mesmo quando o Write tool tem).
+- **Descobrir a paleta de cores real de um site (nao adivinhar pelo olho):** usar o browser
+  tool com `javascript_tool` rodando um scan de `getComputedStyle` em todos os elementos,
+  contando `backgroundColor` por frequencia — revela as cores de marca reais mesmo sem acesso
+  ao design system/Figma.
+- **Gerar `.docx`/`.xlsx` do zero:** `docx` (npm, via `docx-js`) e `openpyxl` (Python) cobrem
+  a grande maioria dos casos sem precisar de LibreOffice/Word instalados. Rode o script de
+  build numa pasta temporaria (`npm init -y && npm install docx`), gere o arquivo final no
+  destino certo, e apague a pasta de build — nao deixe `node_modules`/scripts de build
+  misturados com os entregaveis do usuario.
+
+---
+
 ## Observacoes
 
-- Fluxos genericos/rascunho sao ignorados por padrao (ver passo 3); confirme a lista.
+- Fluxos genericos/rascunho sao ignorados por padrao (ver passo 3, Padrao A); confirme a lista.
 - Para um novo cliente, basta repetir informando outro projeto e outro nome de capa — nada e
   hardcoded.
-- Fonte da verdade e sempre a APIPASS via MCP; nao edite nem dependa de JSON local.
+- No Padrao A, fonte da verdade e sempre a APIPASS via MCP; nao edite nem dependa de JSON
+  local. No Padrao B, a fonte da verdade e a analise ja validada com o usuario na conversa (e,
+  se houver, o par de arquivos de referencia) — deixe isso explicito no proprio documento
+  quando o fluxo ainda nao existir na plataforma.
 
 ## Skills relacionadas
 - `anthropic-skills:docx` — montagem do arquivo Word/PDF.

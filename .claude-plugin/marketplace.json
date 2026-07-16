@@ -13,7 +13,7 @@
       "name": "apipass-integrations",
       "source": "./plugins/apipass-integrations",
       "description": "Construa, execute e valide integracoes da APIPASS em linguagem natural. Pesquise endpoints, configure autenticacao e teste fluxos sem sair do seu IDE com IA.",
-      "version": "0.16.1",
+      "version": "0.16.2",
       "author": {
         "name": "APIPASS"
       },

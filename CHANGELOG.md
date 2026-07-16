@@ -1,5 +1,10 @@
 # Changelog — apipass-integrations
 
+## 0.16.2
+### Adicionado
+- **`apipass-gotchas`: `save_flow_development` pode apagar edicao manual feita na UI.** Documentado que `save_flow_development` reenvia o array de steps inteiro (nao e um patch/diff) — se o payload for montado a partir de uma leitura antiga (de antes de um ajuste manual do usuario no canvas), o save sobrescreve e apaga essa mudanca sem aviso. Correcao: sempre rodar `get_flow_development` de novo imediatamente antes de montar o payload de uma edicao.
+- **`apipass-gotchas`: nova secao "Environments e variaveis de stage".** Tres armadilhas documentadas, aprendidas construindo a integracao VNDA <> Opinioes Verificadas (cliente KURMYHOME): nome de stage precisa ser snake_case (`STAGE002` se tiver hifen); nao existe tool MCP para criar uma nova "definition" de variavel de stage — so e possivel preencher valor de variaveis ja cadastradas na conta pela interface web; e `update_environment_variables` tem um bug conhecido (`flowEngineId must be a UUID`) em environments recem-criados, mesmo com `flowEngineId` valido.
+
 ## 0.16.1
 ### Adicionado
 - **`apipass-gotchas`: secao "Fuso horario dos timestamps"** no fluxo de debug de execucao. Documenta que `startTime`/`finishTime` das tools de log vem em UTC, enquanto a UI da plataforma exibe no fuso local da conta — orienta converter antes de reportar horarios ao usuario.

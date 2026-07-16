@@ -1,5 +1,10 @@
 # Changelog — apipass-integrations
 
+## 0.16.1
+### Corrigido
+- **Campos obrigatorios do Loop (`loopType`/`source`) na skill `build-flow`.** Documentado que o `.utility.loop.LoopCanvas` precisa de `loopType: "EACH_ITEM"` E `source: "{{$.aN.body}}"` explicitos — sem `loopType`, a UI pode mostrar "Item de Array" como valor de exibicao no dropdown "Tipo de Loop", mas a configuracao real nao fica persistida e a execucao roda indefinidamente (nunca termina o loop). O campo "Origem" da UI le de `source`, nao de `valid` — manter os dois preenchidos com o mesmo array (fluxos de referencia reais tem ambos, redundantes). Cada step dentro de `loopSteps` (incluindo `l1StartLoop`/`l1999`) tambem precisa de `previousSteps` e `positionX`/`positionY` — sem isso o sub-canvas do loop nao renderiza os nos ao abrir o step na UI (mesmo bug do canvas principal, mas dentro do loop).
+- **Valor exato de `deleteStrategy` no trigger AMS nas skills `apipass-patterns` e `build-flow`.** O valor correto para retry automatico e `"ON_FLOW_SUCCESS"` — **nao `"ON_SUCCESS"`**, que constava anteriormente na skill `apipass-patterns` (valor plausivel mas inexistente). O engine aceita `"ON_SUCCESS"` no `save_flow_development` sem erro, mas a UI nao reconhece o valor ao reabrir o step: o dropdown "Estrategia de remocao da mensagem" aparece vazio e o campo dependente `defaultVisibilityTimeout` (numero, em segundos) tambem aparece vazio mesmo ja salvo. Sintoma identico ao bug do Loop acima — sempre confirmar valores de enum reabrindo o step na UI apos o save. Documentado tambem que `defaultVisibilityTimeout` deve cobrir o tempo maximo de execucao do fluxo, independente do delay de entrega da fila (que atua so na primeira entrega da mensagem).
+
 ## 0.16.0
 ### Adicionado
 - **Padrao de diagramas de sequencia SVG->PNG na skill `document-flows`.** A secao 7 foi reescrita com o padrao validado em producao (projeto BMES — Nuvemshop <> Opinoes Verificadas):

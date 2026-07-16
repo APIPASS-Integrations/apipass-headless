@@ -86,25 +86,34 @@ A imagem do trigger REST é **`"api"`** (NÃO `"rest"` — `"rest"` renderiza im
 
 ### Loop — use SEMPRE o v3 (`LoopCanvas`)
 O único tipo de loop válido é **`.utility.loop.LoopCanvas`** (image `"loop"`). Os tipos
-`.utility.loop.LoopUtility` e `.utility.loop.LoopUtilityV2` foram **descontinuados** — nunca os use
-(o `LoopUtilityV2` usa `loopType`/`source`/`LoopStart`/`LoopEnd`; isso é legado).
+`.utility.loop.LoopUtility` e `.utility.loop.LoopUtilityV2` foram **descontinuados** — nunca os use.
 
-O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). O array iterado vai em
-`valid`. Início/fim do corpo são `.StartLoop` (`l1StartLoop`) e `.StopLoop` (`l1999`); os passos do
-corpo usam ids `l1a0`, `l1a1`, … e `lastGeneratedLoopId` reflete o número do loop (`l1` → 1).
+O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). Início/fim do corpo são
+`.StartLoop` (`l1StartLoop`) e `.StopLoop` (`l1999`); os passos do corpo usam ids `l1a0`, `l1a1`, … e
+`lastGeneratedLoopId` reflete o número do loop (`l1` → 1).
+
+**Campos obrigatórios do loop — `loopType` E `source` (não só `valid`):**
+- `loopType: "EACH_ITEM"` — **sem esse campo, a UI pode ATÉ mostrar "Item de Array" no dropdown "Tipo de Loop" (valor de exibição/default), mas a configuração real não fica persistida e a execução roda indefinidamente** (nunca termina o loop). Sempre setar explicitamente.
+- `source: "{{$.aN.body}}"` — o array a iterar. **É esse campo que a UI lê para o campo "Origem"** quando `loopType` está configurado — não `valid`. Se só `valid` for preenchido (sem `loopType`), o campo "Origem" aparece vazio na UI mesmo com o step salvo.
+- `valid: "{{$.aN.body}}"` (mesmo valor de `source`) — mantenha os dois preenchidos com o mesmo array; fluxos de referência reais têm ambos os campos, redundantes.
+- Cada step dentro de `loopSteps` (incluindo `l1StartLoop` e `l1999`) também precisa de `previousSteps` (ver seção "Conexões entre steps" abaixo) e de `positionX`/`positionY` — sem isso, o sub-canvas do loop não renderiza os nós ao abrir o step na UI (mesmo bug do canvas principal, mas dentro do loop).
+
 ```json
 {
   "id": "l1",
   "label": "Loop",
   "type": ".utility.loop.LoopCanvas",
   "image": "loop",
+  "loopType": "EACH_ITEM",
+  "source": "{{$.a3.body}}",
   "valid": "{{$.a3.body}}",
   "nextSteps": [{ "id": "a4", "type": "...", "sourceUUID": "integration-step-uuid-sourceEndpoint-l1", "targetUUID": "integration-step-uuid-targetEndpoint-a4" }],
   "loopSteps": [
-    { "id": "l1StartLoop", "type": ".StartLoop", "image": "start", "label": "Início",
+    { "id": "l1StartLoop", "type": ".StartLoop", "image": "start", "label": "Início", "previousSteps": [], "positionX": 8043, "positionY": 8718,
       "nextSteps": [{ "id": "l1a0", "type": "...", "sourceUUID": "integration-step-uuid-sourceEndpoint-l1StartLoop", "targetUUID": "integration-step-uuid-targetEndpoint-l1a0" }] },
-    { "id": "l1a0", "type": "...", "label": "...", "nextSteps": [{ "id": "l1999", "type": ".StopLoop", "state": "LINKED", "sourceUUID": "integration-step-uuid-sourceEndpoint-l1a0", "targetUUID": "integration-step-uuid-targetEndpoint-l1999" }] },
-    { "id": "l1999", "type": ".StopLoop", "image": "stop", "label": "Fim", "nextSteps": [] }
+    { "id": "l1a0", "type": "...", "label": "...", "previousSteps": [{ "id": "l1StartLoop", "type": ".StartLoop", "label": "Início", "image": "start", "output": null }], "positionX": 8253, "positionY": 8718,
+      "nextSteps": [{ "id": "l1999", "type": ".StopLoop", "state": "LINKED", "sourceUUID": "integration-step-uuid-sourceEndpoint-l1a0", "targetUUID": "integration-step-uuid-targetEndpoint-l1999" }] },
+    { "id": "l1999", "type": ".StopLoop", "image": "stop", "label": "Fim", "previousSteps": [{ "id": "l1a0", "type": "...", "label": "...", "image": "...", "output": null }], "positionX": 8463, "positionY": 8718, "nextSteps": [] }
   ]
 }
 ```
@@ -213,6 +222,9 @@ Isso vale dentro de codigo NodeJS (`$.a0.body.campo`) e dentro de interpolacoes 
 
 ### AMS e AOS — filas assincronas e Object Store
 Para consumir/publicar mensagens via fila (AMS) ou persistir dados no MongoDB nativo da APIPASS (AOS), ver `/apipass-integrations:apipass-patterns` (secoes "AMS — Apipass Message System" e "AOS — Apipass Object Store") — shapes completos do trigger `TriggerAMSConsumeMessage`, do step `AMS_SEND_MESSAGE`, de `AOS_FIND_ONE_BY_QUERY`/`AOS_UPDATE`/`AOS_INSERT`/`AOS_DELETE` e do NodeJS helper de `$set`.
+
+**`deleteStrategy` do trigger AMS — valores exatos:** `"IMMEDIATELY"` ou `"ON_FLOW_SUCCESS"` (NAO `"ON_SUCCESS"` — esse valor parece plausivel mas nao existe; o engine aceita no save sem erro, mas a UI nao reconhece o valor ao abrir o step: o dropdown "Estrategia de remocao da mensagem" aparece vazio e, por consequencia, o campo dependente `defaultVisibilityTimeout` (numero, em segundos) tambem aparece vazio mesmo que ja esteja salvo. Sintoma identico ao bug do `loopType`/`source` do Loop — confira sempre o valor exato reabrindo o step na UI apos o save.
+
 ### Step NodeJS
 - `type: ".utility.nodejs.NodeJSUtility"`, `image: "nodejs"`
 - Exportar resultado: `$export(null, { campo: valor })`

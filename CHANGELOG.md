@@ -1,8 +1,8 @@
 # Changelog — apipass-integrations
 
-## Unreleased
+## 0.16.3
 ### Corrigido
-- **Sintaxe de interpolacao do token OAuth em step HTTP generico (`.service.http.HttpRequest`) com `authId`/`authProvider` no proprio step.** Confirmado empiricamente (fluxo "Sincronizacao de Leads - PostgreSQL para Pipedrive", conta demonstracao) que o campo correto e `{{$.authorization.access_token}}` — **sem** o id da autorizacao no caminho. A forma antes sugerida implicitamente, `{{$.authorization.<authId>.access_token}}`, nao resolve: o `authId`/`authProvider` no topo do step ja escopa qual autorizacao esta em uso, e `{{$.authorization.<campo>}}` acessa os campos dessa autorizacao ja escopada (os mesmos listados por `get_authorization_interpolation_fields(authId)`). Atualizado nas skills `apipass-actions` (secao "Autorizacoes"), `build-flow` (secao 2c) e `apipass-gotchas` (nova linha na tabela de armadilhas de construcao de fluxo).
+- **Sintaxe de interpolacao do token OAuth em step HTTP generico (`.service.http.HttpRequest`) com `authId`/`authProvider` no proprio step.** Confirmado empiricamente (fluxo "Sincronizacao de Leads - PostgreSQL para Pipedrive", conta demonstracao) que o campo correto e `{{$.authorization.access_token}}` -- **sem** o id da autorizacao no caminho. A forma antes sugerida implicitamente, `{{$.authorization.<authId>.access_token}}`, nao resolve: o `authId`/`authProvider` no topo do step ja escopa qual autorizacao esta em uso, e `{{$.authorization.<campo>}}` acessa os campos dessa autorizacao ja escopada (os mesmos listados por `get_authorization_interpolation_fields(authId)`). Atualizado nas skills `apipass-actions` (secao "Autorizacoes"), `build-flow` (secao 2c) e `apipass-gotchas` (nova linha na tabela de armadilhas de construcao de fluxo).
 
 ## 0.16.2
 ### Adicionado

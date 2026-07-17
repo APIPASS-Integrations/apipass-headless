@@ -30,7 +30,7 @@ cada no tiver `endpointDefinitions`. Sem isso o canvas fica quebrado / agente "s
 
 ## Regra de saida (gotcha critico)
 - **A saida do AGENTE e lida via `.response`**: `{{$.a0.response}}` — NAO `.body`. (Vale no stop e em interpolacoes.)
-- As demais acoes de IA (embedding, vector store, loader, splitter, completion) seguem a regra universal: `.body`.
+- As demais acoes de IA (embedding, vector store, loader, splitter, completion) sao steps baseados em HTTP por baixo e por isso usam `.body` — nao ha uma regra universal de `.body` para todo step (ver `apipass-actions`/`build-flow`: actions de catalogo com shape proprio, ex. `SQL_QUERY`, ou o `.data` do `LoopCanvas`, nao usam `.body`).
 
 ## Mapa de ligacoes (`*RouteConfigId`)
 Os satelites se conectam por campos de id (sem `nextSteps`). As ligacoes sao **simetricas** (forward no pai, back-ref no filho):

@@ -107,7 +107,7 @@ A APIPASS usa expressoes **mustache** `{{$.<caminho>}}` para referenciar a saida
 - `{{$.trigger.body}}` — o payload (body) recebido pela trigger.
 - `{{$.<idDoStep>}}` — a saida de outro step pelo id (ex. `{{$.a0}}`, `{{$.a1}}`).
 - `{{$.<idDoStep>.<campo>}}` — um campo especifico da saida.
-- **Saida de step NodeJS** (`$export(null, { x, y })`): leia com prefixo **`.body`** — ex. `{{$.a1.body.x}}`, NAO `{{$.a1.x}}`. O objeto exportado vai sob `body` na saida do step.
+- **Nao existe um `.body` universal — cada tipo de step tem seu proprio shape de saida.** Steps baseados em HTTP (**HTTP** e **NodeJS**, que roda sobre um mecanismo HTTP por baixo) encapsulam o resultado em `.body` (+ `.headers`) — ex. `{{$.a1.body.x}}` para o que um NodeJS exportou com `$export(null, {x})`. Outras actions de catalogo tem shape proprio: ex. `SQL_QUERY` expoe `.result` / `.rowCount` / `.updateCount` diretamente, SEM `.body` (`{{$.a0.result}}`, `{{$.a0.updateCount}}`). O item atual dentro de um `LoopCanvas` e exposto como `.data` (`{{$.l1.data.campo}}`), tambem sem `.body`. Confirme sempre o shape real via `get_action_struct` (actions de catalogo) ou lendo um fluxo real com `get_flow_development`, em vez de assumir `.body` por padrao.
 - `{{$.flowExecution.status}}` — contexto da execucao (usado em regras de resposta do StopStep).
 
 Ex.: para repassar TODO o payload da trigger num HttpRequest, use `"rawData": "{{$.trigger.body}}"`. Confirme o caminho exato lendo o `output` do step anterior em `get_flow_development` (cada trigger/acao expoe seu proprio schema de saida).

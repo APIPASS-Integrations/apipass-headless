@@ -1,5 +1,9 @@
 # Changelog — apipass-integrations
 
+## 0.16.4
+### Corrigido
+- **Removida a afirmacao de que existe um `.body` universal para toda saida de step, nas skills `apipass-actions`, `build-flow` e `apipass-agent-actions`.** Cada tipo de step tem seu proprio shape de saida: steps baseados em HTTP (**HTTP** e **NodeJS**, que roda sobre um mecanismo HTTP por baixo) encapsulam o resultado em `.body`/`.headers`; mas actions de catalogo com shape proprio nao usam `.body` -- ex. `SQL_QUERY` expoe `.result`/`.rowCount`/`.updateCount` diretamente, e o item atual dentro de um `LoopCanvas` e exposto em `.data` (`{{$.l1.data.campo}}`). Confirmado empiricamente em fluxos reais da conta demonstracao: `{{$.a0.updateCount}}` (SQL_QUERY de INSERT), `$.l0.data` (item de loop em NodeJS) e `{{$.a0.result}}`/`$.l1.data.campo` (SELECT usado como source de LoopCanvas, execucao de teste com 8 registros). Sempre confirmar o shape real via `get_action_struct` ou `get_flow_development` em vez de assumir `.body` por padrao.
+
 ## 0.16.3
 ### Corrigido
 - **Sintaxe de interpolacao do token OAuth em step HTTP generico (`.service.http.HttpRequest`) com `authId`/`authProvider` no proprio step.** Confirmado empiricamente (fluxo "Sincronizacao de Leads - PostgreSQL para Pipedrive", conta demonstracao) que o campo correto e `{{$.authorization.access_token}}` -- **sem** o id da autorizacao no caminho. A forma antes sugerida implicitamente, `{{$.authorization.<authId>.access_token}}`, nao resolve: o `authId`/`authProvider` no topo do step ja escopa qual autorizacao esta em uso, e `{{$.authorization.<campo>}}` acessa os campos dessa autorizacao ja escopada (os mesmos listados por `get_authorization_interpolation_fields(authId)`). Atualizado nas skills `apipass-actions` (secao "Autorizacoes"), `build-flow` (secao 2c) e `apipass-gotchas` (nova linha na tabela de armadilhas de construcao de fluxo).

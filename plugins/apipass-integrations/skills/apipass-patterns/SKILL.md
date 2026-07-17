@@ -176,7 +176,7 @@ Ex.: {{$.stage.name}}-ams-inbound-demanda-atualizar-agendamento-trizy-multi
 }
 ```
 - `concurrentConsumers`: numero de consumidores paralelos (tipicamente 5–10).
-- `deleteStrategy: "IMMEDIATELY"`: remove a mensagem da fila assim que entregue. Usar `"ON_SUCCESS"` para retry automatico em caso de falha no processamento.
+- `deleteStrategy: "IMMEDIATELY"`: remove a mensagem da fila assim que entregue. Usar `"ON_FLOW_SUCCESS"` para retry automatico em caso de falha no processamento — **NAO `"ON_SUCCESS"`** (valor plausivel mas inexistente; o engine aceita no save sem erro, porem a UI nao reconhece o valor ao reabrir o step: o dropdown "Estrategia de remocao da mensagem" aparece vazio e o campo dependente `defaultVisibilityTimeout` tambem aparece vazio, mesmo ja salvo). Ao usar `"ON_FLOW_SUCCESS"`, preencha tambem `defaultVisibilityTimeout` (numero, em segundos) — deve cobrir o tempo maximo de execucao do fluxo (nao o delay de entrega da fila, que e independente e atua so na primeira entrega).
 
 ### Step AMS_SEND_MESSAGE (publicar mensagem)
 ```json

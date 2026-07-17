@@ -85,6 +85,23 @@ Descubra as credenciais disponiveis com as ferramentas (RBAC aplicado; nenhum se
 
 Regra: preencha `authId`/`authProvider` a partir de `list_authorizations`. Se nao houver credencial para o provider ou houver ambiguidade, pergunte ao usuario — nunca chute `authId` nem cole token no step.
 
+### Sintaxe de interpolacao do token (confirmado empiricamente)
+Quando um step `.service.http.HttpRequest` referencia a autorizacao via `authId` + `authProvider` no PROPRIO step, os campos dessa credencial (ex. `access_token`, listados por `get_authorization_interpolation_fields(authId)`) sao acessados **sem o id no caminho**: `{{$.authorization.access_token}}`. O `authId`/`authProvider` no topo do step ja escopa QUAL autorizacao esta em uso; NAO use `{{$.authorization.<authId>.access_token}}` — essa forma com o id embutido esta ERRADA e nao resolve.
+
+```json
+{
+  "id": "a1",
+  "type": ".service.http.HttpRequest",
+  "authProvider": "PIPEDRIVE",
+  "authId": "1be24008-9d24-48ec-9fd4-2d9782a2e128",
+  "method": "POST",
+  "url": "https://api.pipedrive.com/v1/persons",
+  "headers": [
+    { "label": "Authorization", "value": "Bearer {{$.authorization.access_token}}" }
+  ]
+}
+```
+
 ## Referenciar dados entre passos (interpolacao)
 A APIPASS usa expressoes **mustache** `{{$.<caminho>}}` para referenciar a saida de passos anteriores e o contexto de execucao. **NAO use `${...}`** (estilo Camel/JS) — esse formato esta errado.
 - `{{$.trigger.body}}` — o payload (body) recebido pela trigger.

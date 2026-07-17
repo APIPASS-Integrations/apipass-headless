@@ -3,7 +3,7 @@
 ## 0.16.2
 ### Adicionado
 - **`apipass-gotchas`: `save_flow_development` pode apagar edicao manual feita na UI.** Documentado que `save_flow_development` reenvia o array de steps inteiro (nao e um patch/diff) — se o payload for montado a partir de uma leitura antiga (de antes de um ajuste manual do usuario no canvas), o save sobrescreve e apaga essa mudanca sem aviso. Correcao: sempre rodar `get_flow_development` de novo imediatamente antes de montar o payload de uma edicao.
-- **`apipass-gotchas`: nova secao "Environments e variaveis de stage".** Duas armadilhas documentadas, aprendidas construindo a integracao VNDA <> Opinioes Verificadas (cliente KURMYHOME): nome de stage precisa ser snake_case (`STAGE002` se tiver hifen); e nao existe tool MCP para criar uma nova "definition" de variavel de stage — so e possivel preencher valor de variaveis ja cadastradas na conta pela interface web.
+- **`apipass-gotchas`: nova secao "Environments e variaveis de stage".** Armadilhas documentadas, aprendidas construindo a integracao VNDA <> Opinioes Verificadas (cliente KURMYHOME): nome de stage precisa ser snake_case (`STAGE002` se tiver hifen); e uma variavel nova so aparece no environment depois de cadastrada a nivel de conta com `create_variable_definition` (antes so era possivel preencher valor de variaveis ja cadastradas, pela interface web).
 
 ## 0.16.1
 ### Adicionado

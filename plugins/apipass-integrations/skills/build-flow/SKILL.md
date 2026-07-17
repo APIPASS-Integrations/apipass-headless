@@ -210,13 +210,18 @@ Ver shape completo e exemplos em `/apipass-integrations:apipass-patterns` (secao
 - a999: positionX do ultimo step regular + 210
 - **Loop (`LoopCanvas`)**: os steps dentro de `loopSteps` usam um espaco de coordenadas PROPRIO do canvas do loop (recomece em ~`8000`, ex. `l1StartLoop: 8043,8718`, incrementando 210), independente das posicoes do canvas principal.
 
-### Acesso a saida de steps — regra universal
-Todo step (HTTP, NodeJS ou acao do catalogo) retorna seu resultado em `.body`. **Sempre use `.body` ao referenciar a saida de qualquer step.**
+### Acesso a saida de steps — nao existe um `.body` universal
+Cada tipo de step define seu proprio shape de saida — `.body` NAO e sintaxe obrigatoria de interpolacao, e sim um campo que existe (ou nao) dependendo do formato nativo daquele step:
 
-- `$.a0.body.campo` — acessa `campo` exportado pelo step a0
-- `$.a1.body.results` — acessa `results` da resposta do step a1
-- Exemplo correto: `var results = $.a1.body.results;`
-- Exemplo ERRADO: `var results = $.a1.results;` ← nunca omita `.body`
+- **HTTP** (`.service.http.HttpRequest`) e **NodeJS** (`.utility.nodejs.NodeJSUtility`, que roda sobre um mecanismo HTTP por baixo) encapsulam o resultado em `.body` (+ `.headers`). O que um NodeJS exporta com `$export(null, {...})` vai para dentro desse `body`.
+  - `{{$.a0.body.campo}}` — acessa `campo` exportado pelo NodeJS a0, ou campo do corpo de resposta HTTP do step a0.
+- **Actions de catalogo com shape proprio** (ex. `SQL_QUERY`) NAO usam `.body`. `SQL_QUERY` expoe `.result` (array, para SELECT) e `.rowCount`/`.updateCount` (para INSERT/UPDATE) diretamente no nivel do step.
+  - `{{$.a0.result}}` — array de linhas de um SELECT no step a0.
+  - `{{$.a0.updateCount}}` — linhas afetadas por um UPDATE/INSERT no step a0.
+- **Item atual dentro de um `LoopCanvas`** e exposto em `.data` no nivel daquele loop, tambem sem `.body`.
+  - `{{$.l1.data.campo}}` (ou, em codigo NodeJS dentro do loop: `$.l1.data.campo`) — campo do item da iteracao atual do loop l1.
+
+Isso vale tanto dentro de codigo NodeJS quanto em interpolacoes mustache (`{{...}}`). **Nunca assuma `.body` por padrao** — confirme o shape real do step lendo `get_action_struct` (para actions de catalogo) ou um fluxo real existente com `get_flow_development` antes de montar a interpolacao.
 
 Isso vale dentro de codigo NodeJS (`$.a0.body.campo`) e dentro de interpolacoes (`"{{$.a0.body.campo}}"`).
 
@@ -303,7 +308,7 @@ Apos publicar/rodar, analise logs (ver `/apipass-integrations:apipass-gotchas`):
 - Nunca adivinhe valores de `mappingAttributes` — pesquise ou pergunte.
 - Autenticacao SEMPRE por autorizacao: preencha `authId`/`authProvider` a partir de `list_authorizations`. Nunca embuta credenciais/segredos/tokens direto no step.
 - Nunca invente IDs, tipos ou imagens de steps — siga os padroes da secao 2b.
-- A saida de qualquer step e sempre acessada via `.body` — sem excecao.
+- Nao existe um `.body` universal — o shape de saida varia por tipo de step (ver secao "Acesso a saida de steps"). Confirme sempre via `get_action_struct`/`get_flow_development` antes de assumir `.body`.
 - Operacoes com efeito colateral (`create_*`, `save_flow_development`, `publish_flow`, `delete_*`) exigem `confirm: true` E confirmacao do usuario.
 - Contadores `lastGeneratedStepId`/`lastGeneratedLoopId` devem refletir os ids usados (ver patterns).
 

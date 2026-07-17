@@ -70,7 +70,7 @@ Exemplo — `.service.http.HttpRequest` (shape real; campos no topo, `mappingAtt
   "failOnError": true, "generateRawData": false
 }
 ```
-O corpo da requisicao vai em **`rawData`** (string), nao num campo `body`.
+O corpo da requisicao vai em **`rawData`** (string), nao num campo `body`. O campo `contentType` de nivel raiz (visto acima) e copiado do `stepSkeleton` mas nao e aplicado de fato pelo engine — o `Content-Type` real depende do item `headers` com `label: "Content-Type"`. Mesma ressalva vale para `bearerToken` (nao autentica de fato). Ver `/apipass-integrations:build-flow`, secao "Step HTTP", para detalhes e o shape correto de header de autenticacao.
 
 ## Autorizacoes (credenciais) — `authId` / `authProvider`
 Toda acao que autentica referencia uma **autorizacao ja cadastrada**, nunca um segredo embutido no step. Os dois campos do FlowStep envolvidos:

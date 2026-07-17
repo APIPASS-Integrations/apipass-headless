@@ -240,6 +240,16 @@ Para consumir/publicar mensagens via fila (AMS) ou persistir dados no MongoDB na
 - Campos no nivel raiz: `url`, `method`, `rawData`, `bearerToken`, `contentType`, `headers: []`, `params: []`, `async: false`
 - Interpolacao no rawData: `"{{$.a0.body.campo}}"`
 
+**`bearerToken`/`contentType` de nivel raiz NAO sao aplicados de fato a requisicao (confirmado empiricamente com teste de eco via httpbin.org).** Mesmo preenchidos, o header `Authorization` nao e enviado e o `Content-Type` real da chamada e sempre `text/plain`, nunca o valor configurado. Esses campos existem no `stepSkeleton` (copie-os por compatibilidade de schema), mas nao confie neles para autenticacao ou content-type — configure via `headers` (abaixo).
+
+**`Authorization` e `Content-Type` so funcionam via o array `headers`, e cada item usa `label`/`value` — NUNCA `key`/`value`.** Um header montado com `key` em vez de `label` e aceito silenciosamente pelo `save_flow_development` e pela execucao (sem erro, sem log), mas o header nunca e enviado. Exemplo completo, incluindo o token OAuth de uma autorizacao referenciada no proprio step via `authId`/`authProvider` (sintaxe de interpolacao sem o id embutido — ver `/apipass-integrations:apipass-actions`):
+```json
+"headers": [
+  { "label": "Content-Type", "value": "application/json" },
+  { "label": "Authorization", "value": "Bearer {{$.authorization.access_token}}" }
+]
+```
+
 ### Step de acao do catalogo (WhatsApp, Outlook, etc.)
 - `type: ".service.actions.Action"`
 - `actionId`: ID da acao (ex: `"WHATSAPP_SEND_TEXT_MESSAGE"`)

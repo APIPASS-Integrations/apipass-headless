@@ -267,7 +267,7 @@ Para consumir/publicar mensagens via fila (AMS) ou persistir dados no MongoDB na
 
 - Descubra as credenciais disponiveis com `list_authorizations` (filtre por `provider` e/ou `projectId`). O `id` retornado vai em `authId`; o `provider` vai em `authProvider`.
 - Para acoes do catalogo (`.service.actions.Action`), o `authProvider`/`authId` casam com o grupo/provider da acao (ex. `WHATSAPP`). Para HTTP que precise de credencial, use `authId` da autorizacao adequada em vez de colar token no step.
-- Precisa usar um valor da credencial dentro do step (header/param)? Use `get_authorization_interpolation_fields(id)` e interpole via `{{...}}` — nunca cole o segredo.
+- Precisa usar um valor da credencial dentro do step (header/param)? Use `get_authorization_interpolation_fields(id)` para descobrir os campos disponiveis (ex. `access_token`), mas interpole **sem o id no caminho**: `{{$.authorization.access_token}}` — nunca `{{$.authorization.<authId>.access_token}}` (forma com id embutido, ERRADA, nao resolve). O `authId`/`authProvider` no topo do PROPRIO step ja escopa qual autorizacao esta em uso; nunca cole o segredo.
 - Antes de trocar/remover uma credencial, veja o impacto com `list_flows_using_authorization(authId)`.
 - Se nao houver autorizacao para o provider, ou houver ambiguidade, PERGUNTE ao usuario (ou peca para cadastrar) — nao invente `authId` nem embuta credencial.
 

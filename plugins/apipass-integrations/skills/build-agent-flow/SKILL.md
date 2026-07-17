@@ -44,7 +44,7 @@ Apenas o agente participa do `nextSteps` (vem do pre-processamento, vai pro stop
 | Ingestor → Loader → Splitter | `documentLoaderRouteConfigId` / `documentSplitterRouteConfigId` (em `inputData`) | `vectorStoreRouteConfigId` / `documentLoaderRouteConfigId` |
 
 ## 2. Regras que mudam em relacao ao fluxo comum
-- **Saida do agente via `.response`**: leia `{{$.a0.response}}` no stop/interpolacoes — NAO `.body`. (As demais acoes de IA seguem `.body`.)
+- **Saida do agente via `.response`**: leia `{{$.a0.response}}` no stop/interpolacoes — NAO `.body`. (Satelites — modelo, memoria, embedding, loader, splitter — se ligam via `*RouteConfigId` e nao tem saida referenciada por interpolacao; a excecao e `CHATGPT_CREATE_COMPLETION`, passo linear fora do agente, que usa `.body` como qualquer step HTTP.)
 - **Satelites fora do `nextSteps`**: se voce ligar modelo/memoria/tool por `nextSteps`, o designer quebra e o agente aparece "sem modelo". O vinculo e SO por `*RouteConfigId`.
 - **`endpointDefinitions` faz o designer DESENHAR as arestas** (o `*RouteConfigId` faz EXECUTAR — sozinho NAO renderiza). Hub e ingestor precisam de `endpointDefinitions.bottomEndpoints` (as portas de saida); cada satelite precisa de `endpointDefinitions.targetPosition: "Top"`. **Sem isso o canvas fica quebrado / "sem modelo" mesmo com a execucao funcionando** — e a falha de render mais comum em fluxos com tool/embedding (um agente so-com-modelo as vezes renderiza sem, mas multi-satelite nao). Shapes exatos por no em `apipass-agent-actions`.
 - **`label` de porta = chave i18n REAL ou texto literal**: portas do agente usam `AI_AGENT.MODEL`/`.MEMORY`/`.TOOLS`; loader usa `DOCUMENT_LOADER.TEXT_SPLITTER`. Para portas sem chave conhecida (ex. embedding de vector store) use texto literal (`"Embedding"`) — uma chave i18n inexistente aparece **crua** no canvas.
@@ -87,7 +87,7 @@ Depois siga o ciclo padrao de `build-flow`:
 
 ## Principios
 - A topologia e hub-and-spoke: satelites NUNCA na cadeia `nextSteps`, so por `*RouteConfigId` (simetrico).
-- Saida do agente sempre por `.response`; demais acoes por `.body`.
+- Saida do agente sempre por `.response`; satelites (modelo/memoria/embedding/loader/splitter) nao tem saida interpolavel; `CHATGPT_CREATE_COMPLETION` (fora do agente) usa `.body`.
 - Nunca invente `type`/`actionId`/campos de `inputData` — pesquise (`apipass-agent-actions`, `get_action_struct`, fluxo real).
 - Credenciais sempre por referencia; nunca embuta chave de provider de IA no step.
 

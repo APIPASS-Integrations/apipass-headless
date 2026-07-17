@@ -3,6 +3,7 @@
 ## 0.16.4
 ### Corrigido
 - **Removida a afirmacao de que existe um `.body` universal para toda saida de step, nas skills `apipass-actions`, `build-flow` e `apipass-agent-actions`.** Cada tipo de step tem seu proprio shape de saida: steps baseados em HTTP (**HTTP** e **NodeJS**, que roda sobre um mecanismo HTTP por baixo) encapsulam o resultado em `.body`/`.headers`; mas actions de catalogo com shape proprio nao usam `.body` -- ex. `SQL_QUERY` expoe `.result`/`.rowCount`/`.updateCount` diretamente, e o item atual dentro de um `LoopCanvas` e exposto em `.data` (`{{$.l1.data.campo}}`). Confirmado empiricamente em fluxos reais da conta demonstracao: `{{$.a0.updateCount}}` (SQL_QUERY de INSERT), `$.l0.data` (item de loop em NodeJS) e `{{$.a0.result}}`/`$.l1.data.campo` (SELECT usado como source de LoopCanvas, execucao de teste com 8 registros). Sempre confirmar o shape real via `get_action_struct` ou `get_flow_development` em vez de assumir `.body` por padrao.
+- **Corrigida a mesma imprecisao para as acoes de IA satelites, em `apipass-agent-actions` e `build-agent-flow`.** Satelites do agente (modelo, memoria, embedding, document loader, splitter) se ligam ao hub via `*RouteConfigId`, fora da cadeia `nextSteps` -- eles nao geram saida referenciada por interpolacao em outros steps, entao a afirmacao anterior de que "seguem `.body`" nao se aplica. A unica acao de IA fora do agente com saida usada downstream e o `CHATGPT_CREATE_COMPLETION` (completion simples, nao-agentica): esse sim e um step HTTP por baixo e usa `.body` normalmente.
 
 ## 0.16.3
 ### Corrigido

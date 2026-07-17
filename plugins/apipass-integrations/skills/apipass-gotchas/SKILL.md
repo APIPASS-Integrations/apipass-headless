@@ -89,6 +89,13 @@ O que observar no `input` do step:
 - **queryParams diferentes** — filtro ausente que a API exige
 - **headers ausentes** — token/auth que nao foi interpolado corretamente
 Para metricas agregadas: `get_execution_summary(period: daily|hourly|monthly|flow|total|average|flow-engine-usage, startDate, endDate)`.
+
+### Fuso horario dos timestamps
+Todos os timestamps retornados pelas tools de log (`startTime`, `finishTime` em `get_flow_execution_log`, `list_flow_execution_logs`, `list_step_execution_logs`) vem em **UTC** (sufixo `Z`, ex. `2026-07-09T17:23:14.017Z`). A UI da plataforma exibe no fuso horario local da conta (ex. America/Sao_Paulo, UTC-3), entao reportar o valor cru da API diverge do que o usuario ve no log do ambiente. Converta para o fuso do usuario antes de reportar horarios, e deixe explicito que e horario local quando relevante.
+
+### Evidencia junto da conclusao
+Ao concluir a causa raiz de um erro ("a URL/filtro/payload esta correto, o problema foi da API externa"), nao basta declarar a conclusao — anexe a evidencia concreta (input/output do step) junto da resposta. O padrao mais forte e comparar lado a lado a execucao com erro e uma execucao de sucesso/retry com o MESMO input: se o request e identico e o resultado muda (500 -> 200), isso isola a causa na API externa, nao no fluxo. Mostre esse comparativo (tabela ou trecho do `read_step_payload`) em vez de so o veredito em prosa.
+
 ## Melhorias recomendadas apos debug
 Apos identificar a causa raiz de um erro recorrente, sugira proativamente ao usuario as melhorias abaixo quando aplicavel:
 ### Validacao de input no trigger (JSON Schema)

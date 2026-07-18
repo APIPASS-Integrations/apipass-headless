@@ -1,6 +1,6 @@
 {
   "name": "apipass-integrations",
-  "version": "0.16.5",
+  "version": "0.17.0",
   "description": "APIPASS Headless para Claude Code — construa, execute e valide integracoes da APIPASS em linguagem natural. Pesquise acoes, configure autenticacao e analise logs de execucao sem sair do seu IDE com IA.",
   "author": {
     "name": "APIPASS",

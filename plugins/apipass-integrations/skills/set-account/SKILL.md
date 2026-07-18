@@ -16,7 +16,7 @@ A APIPASS e multi-realm: **um realm do Keycloak por cliente, resolvido pelo `acc
    ```
    O servidor resolve o realm, retorna a URL de autorizacao.
 2. Abra a URL no navegador, autorize no Keycloak da sua conta.
-3. O token fica vinculado a sua sessao e renova sozinho. `apipass_auth_status` mostra o estado; `apipass_logout` descarta.
+3. Nao espere o usuario avisar que autorizou: faca poll de `apipass_auth_status` voce mesmo a cada poucos segundos ate `authenticated: true` (ou timeout de alguns minutos), depois prossiga com a acao original automaticamente. O token fica vinculado a sua sessao e renova sozinho; `apipass_logout` descarta.
 
 ## Observacoes
 - O `account_name` so e necessario para escolher o realm no login; depois disso, o API Gateway deriva a identidade do proprio token.

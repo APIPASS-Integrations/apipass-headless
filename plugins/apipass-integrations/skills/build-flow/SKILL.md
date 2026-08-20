@@ -122,6 +122,35 @@ O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). I
 }
 ```
 
+**Modo de repetição fixa (`loopType: "TIMES"`) — alternativa ao `EACH_ITEM`.** Quando o loop não
+itera um array mas um número fixo de vezes ("Tipo de Loop: Repetição" na UI, configurado no
+próprio step `.StartLoop`/"Início" do corpo, mas persistido nestes campos do `LoopCanvas` pai),
+os campos mudam:
+- `loopType: "TIMES"` (em vez de `"EACH_ITEM"`).
+- `numberOfTimes: <N>` no lugar de `source`/`valid` — não há array a iterar, então não existe
+  item atual exposto via `.data` nesse modo.
+- `failOnError: false` no próprio `LoopCanvas` — confirmado em fluxo real publicado
+  (`{"loopType":"TIMES","numberOfTimes":2,"failOnError":false}`): um erro dentro do corpo numa
+  iteração não aborta automaticamente o loop inteiro.
+- **A contagem de repetições é responsabilidade do próprio step de Loop** — não é necessário
+  montar um Switch checando um índice de iteração só para limitar quantas vezes o corpo roda.
+  Use esse modo para padrões de retry (tentar uma chamada; se falhar, tentar de novo até N
+  vezes) sem simular um contador manualmente.
+- Para sair do loop antes de esgotar as repetições configuradas (ex.: retry teve sucesso já na
+  1ª tentativa), use `.utility.loop.BreakLoop` dentro de `loopSteps` — encerra o loop
+  imediatamente e a execução segue para o `nextSteps` do próprio `LoopCanvas`, **sem passar
+  pelo `.StopLoop` interno do corpo** (confirmado em fluxo real: o `nextSteps` de um
+  `BreakLoop` fica vazio/implícito — ele não se liga a nenhum outro step dentro do loop, é um
+  "salto" direto para fora). Para apenas avançar para a próxima iteração sem terminar o loop
+  (deixar a iteração atual acabar sem break), simplesmente não chame `BreakLoop` nela — existe
+  também `.utility.loop.ContinueLoop` (mesmo grupo/imagem) para isso.
+- `get_flow_development` em fluxos com Loop grande (muitos steps de fallback dentro do corpo)
+  pode truncar a resposta antes de alcançar os campos `loopType`/`numberOfTimes` do
+  `LoopCanvas` pai — eles ficam depois do array `loopSteps` fechar no JSON, que pode ser grande
+  o bastante para nunca ser alcançado pelo limite de tamanho da resposta. Não há alternativa
+  via API para contornar isso; se precisar desse valor e a resposta truncar, pergunte
+  diretamente a quem configurou o loop na UI em vez de insistir em rebuscar.
+
 ### Tipos fixos canonicos (NUNCA invente o `type`)
 Esses steps "fixos" existem no catalogo (`list_actions`) — mas atencao ao **grupo**, que NAO bate com o rotulo visual. Filtrar pelo nome errado faz o catalogo parecer vazio e leva a inventar um `type` que o engine aceita no save mas a **UI nao abre**. Os types corretos:
 
@@ -131,6 +160,8 @@ Esses steps "fixos" existem no catalogo (`list_actions`) — mas atencao ao **gr
 | Tratar erro | `.utility.error.ErrorHandler` | `error` | `error-route` |
 | Loop (v3) | `.utility.loop.LoopCanvas` | `loop` | `loop` |
 | Inicio/Fim do loop | `.StartLoop` / `.StopLoop` | `loop` | `start` / `stop` |
+| Parar loop (break) | `.utility.loop.BreakLoop` | `loop` | `break-loop` |
+| Continuar loop (continue) | `.utility.loop.ContinueLoop` | `loop` | (mesmo grupo `loop`) |
 | Fim do fluxo | `.StopV2Step` | `stop` | `stop` |
 
 NUNCA use `.conditional.SwitchV2`, `.errorhandler.ErrorHandler`, `.utility.loop.LoopUtility(V2)` — sao inventados/descontinuados e quebram o designer.

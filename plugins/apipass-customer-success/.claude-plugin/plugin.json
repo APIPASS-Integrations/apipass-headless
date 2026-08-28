@@ -1,0 +1,22 @@
+{
+  "name": "apipass-customer-success",
+  "version": "0.1.0",
+  "description": "Customer Success da APIPASS para Claude Code — gere o report estrategico trimestral para o gestor do cliente, o extrato mensal de consumo por faturamento e a analise de risco de churn, lendo o ambiente pelo MCP da plataforma.",
+  "author": {
+    "name": "APIPASS",
+    "email": "suporte@apipass.com.br"
+  },
+  "homepage": "https://apipass.com.br",
+  "repository": "https://github.com/APIPASS-Integrations/apipass-plugins",
+  "license": "Apache-2.0",
+  "keywords": [
+    "apipass",
+    "customer-success",
+    "report",
+    "consumo",
+    "faturamento",
+    "churn",
+    "iPaaS",
+    "mcp"
+  ]
+}

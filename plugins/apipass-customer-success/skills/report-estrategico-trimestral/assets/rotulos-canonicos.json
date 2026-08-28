@@ -1,0 +1,55 @@
+{
+  "_comentario": "Rotulos CANONICOS do Report Estrategico Trimestral. O report tem os MESMOS topicos para todo cliente. Estes rotulos sao a base para todos: o JSON do cliente NAO deve redefinir nenhum deles, so os valores. Se um cliente precisar de rotulo diferente, o padrao esta errado e deve mudar AQUI, para todos.",
+
+  "ambiente": "Visão geral do ambiente",
+  "crescimento": "Capacidade de crescimento",
+  "capacidade": "Capacidade do ambiente",
+  "usuarios": "Usuários ativos",
+  "suporte": "Suporte",
+  "confiabilidade": "Confiabilidade das integrações",
+  "oportunidades": "Oportunidades de uso",
+  "atividades": "Atividades em andamento",
+
+  "projetosAtivos": "Projetos ativos",
+  "integracoesAtivas": "Integrações ativas",
+  "integracoesProd": "Integrações em produção",
+  "integracoesSufixo": "integrações",
+  "integracoesSufixoSingular": "integração",
+  "areasAtendidas": "Frentes de negócio atendidas",
+  "sistemasIntegrados": "Sistemas integrados",
+
+  "execucoes": "Execuções",
+  "execucoesTrimestre": "Execuções no trimestre",
+  "taxaSucesso": "Taxa de sucesso",
+  "adicionadoNoTrimestre": "Adicionado no trimestre:",
+
+  "crescProjetos": "Projetos com execução",
+  "crescIntegracoes": "Integrações com execução",
+  "crescExecucoes": "Execuções realizadas",
+  "crescContratado": "Execuções contratadas",
+
+  "projetosLista": "Projetos ativos no período:",
+
+  "suportePorServico": "Por serviço:",
+
+  "capExecucoes": "Mês de maior uso",
+  "capContratado": "Contratado por mês",
+  "capInstancia": "Instância",
+  "capTrafego": "Tráfego de dados",
+  "percentualUso": "Do contratado no pico",
+
+  "emConstrucao": "[Em construção]",
+  "naoConstam": "Não constam nesta edição:",
+
+  "_comentarioSemAcesso": "OBRIGATORIO (Elisama, 26/08/2026): quando nao houver autorizacao de acesso a tela de Gerenciamento de Conta, o report DIZ isso, com estas palavras. Sem a frase o leitor conclui que o relatorio saiu errado -- foi o efeito real ao comparar o report da Conta A com o da Conta B. Nao e opcional e nao depende do JSON do cliente.",
+  "semAcessoCapacidade": "Os dados de capacidade contratada não constam nesta edição porque o acesso à tela de Gerenciamento de Conta desta conta ainda não está autorizado para a APIPASS. Não é indisponibilidade da informação: é uma liberação de acesso em andamento, e a seção passa a ser preenchida na próxima edição.",
+  "semAcessoCapacidadeCurto": "Capacidade contratada — acesso à tela de Gerenciamento de Conta ainda não autorizado para a APIPASS",
+
+  "_comentarioNotaCapacidade": "notaCapacidade ficou ORFA em 27/08/2026: o bloco de capacidade sem dado passa a usar semAcessoCapacidade, que explica a falta de autorizacao. Mantida so para nao quebrar JSON antigo; nao e mais lida pelo script.",
+  "notaCapacidade": "integrações em operação e capacidade contratada da plataforma de integração.",
+  "notaUsuarios": "usuários do cliente que acessaram a plataforma no trimestre, sobre o total de usuários cadastrados.",
+  "notaSuporte": "chamados do trimestre por categoria e tempo típico de resolução.",
+  "notaConfiabilidade": "taxa de sucesso das execuções no trimestre.",
+  "notaOportunidades": "oportunidades de uso identificadas no ambiente.",
+  "notaAtividades": "frentes que os times de Customer Success, Projetos e Arquitetura de Soluções conduzem com o cliente no momento."
+}

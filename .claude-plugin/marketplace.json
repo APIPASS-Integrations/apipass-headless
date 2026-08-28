@@ -30,6 +30,28 @@
         "workflow",
         "conectores"
       ]
+    },
+    {
+      "name": "apipass-customer-success",
+      "source": "./plugins/apipass-customer-success",
+      "description": "Skills de Customer Success da APIPASS: report estrategico trimestral para o gestor do cliente, extrato mensal de consumo por faturamento e analise de risco de churn. Le o ambiente pelo MCP da plataforma e entrega o documento pronto para revisao humana.",
+      "version": "0.1.0",
+      "author": {
+        "name": "APIPASS"
+      },
+      "homepage": "https://apipass.com.br",
+      "repository": "https://github.com/APIPASS-Integrations/apipass-plugins",
+      "license": "Apache-2.0",
+      "keywords": [
+        "apipass",
+        "customer-success",
+        "report",
+        "consumo",
+        "faturamento",
+        "churn",
+        "iPaaS",
+        "mcp"
+      ]
     }
   ]
 }

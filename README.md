@@ -95,13 +95,17 @@ plugins/apipass-integrations/
   .claude-plugin/plugin.json             # manifesto do plugin (versao, metadados)
   .mcp.json                              # servidor MCP hospedado que o plugin usa
   skills/<nome>/SKILL.md                 # comandos /apipass-integrations:<nome>
+  skills/index.json                      # manifesto das skills (gerado: npm run skills:manifest)
   agents/<nome>.md                       # subagentes especializados
   hooks/hooks.json + *.js                # gates de confirmacao (PreToolUse)
+  harness/system-prompt.md + agent.json  # agente do copiloto embarcado no console (TrueForge)
+scripts/skills-manifest.js               # gera/verifica skills/index.json (Node puro)
+.github/workflows/skills-manifest.yml    # CI: falha se index.json estiver desatualizado
 ```
 
 ### Convencoes
 - **Idioma:** skills, agentes e documentacao em portugues (pt-BR), como o restante do plugin.
-- **Skills:** cada skill vive em `skills/<nome>/SKILL.md` com frontmatter (`name`, `description`). A `description` e o que faz o Claude decidir quando carregar a skill — seja especifico.
+- **Skills:** cada skill vive em `skills/<nome>/SKILL.md` com frontmatter (`name`, `description`). A `description` e o que faz o Claude decidir quando carregar a skill — seja especifico. Ao criar, renomear ou alterar a descricao de uma skill, rode `npm run skills:manifest` e commite o `skills/index.json` atualizado (o CI falha se ele estiver desatualizado). Se a nova skill deve estar disponivel no copiloto embarcado, adicione tambem uma linha na tabela de skills de `harness/system-prompt.md`.
 - **Versao:** ao mudar o comportamento do plugin, incremente a `version` em **`plugin.json` e `marketplace.json`** (os dois devem ficar iguais) e adicione uma entrada no [CHANGELOG.md](CHANGELOG.md).
 - **Nunca** embuta credenciais, tokens ou URLs internas no codigo ou na documentacao.
 

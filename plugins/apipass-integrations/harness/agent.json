@@ -1,0 +1,65 @@
+{
+  "model": {
+    "name": "${MODEL_NAME}",
+    "params": {
+      "max_tokens": 16384
+    }
+  },
+  "instructions": "${file:./system-prompt.md}",
+  "mcp_servers": [
+    {
+      "name": "apipass",
+      "enable_tools": ["@all"],
+      "disable_tools": [],
+      "preload_tools": [],
+      "require_approval_for_tools": [
+        "create_custom_action",
+        "update_custom_action",
+        "delete_custom_action",
+        "create_project",
+        "create_flow",
+        "save_flow_development",
+        "retry_execution_new",
+        "retry_execution_replace",
+        "stop_execution",
+        "batch_retry_new",
+        "batch_retry_replace",
+        "batch_retry_new_by_filter",
+        "batch_retry_replace_by_filter",
+        "publish_flow",
+        "unpublish_flow",
+        "create_environment",
+        "update_environment_variables",
+        "set_oas_access",
+        "create_version",
+        "create_test_flow",
+        "run_test_flow"
+      ],
+      "preload": false
+    }
+  ],
+  "config": {
+    "sandbox": {
+      "enabled": false,
+      "file_downloads": false
+    },
+    "dynamic_sub_agents": {
+      "enabled": true
+    },
+    "ask_user_questions": {
+      "enabled": true
+    },
+    "generative_ui": {
+      "enabled": true
+    },
+    "context_management": {
+      "compaction": {
+        "enabled": true
+      },
+      "large_tool_response": {
+        "enabled": true
+      }
+    },
+    "iteration_limit": 50
+  }
+}

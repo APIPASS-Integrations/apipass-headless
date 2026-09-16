@@ -1,0 +1,67 @@
+[
+  {
+    "name": "apipass-actions",
+    "description": "Referencia do catalogo de acoes da APIPASS e a anatomia do FlowStep. Carregue ao montar passos de um fluxo, escolher um gatilho ou preencher mappingAttributes.",
+    "path": "plugins/apipass-integrations/skills/apipass-actions/SKILL.md"
+  },
+  {
+    "name": "apipass-agent-actions",
+    "description": "Referencia do catalogo de acoes de IA da APIPASS (Agent Builder) e a anatomia do step de Agente. Carregue ao montar um fluxo com `.service.ai.AiAgent`, modelo LLM, memoria, tools, embeddings, vector store, document loader ou splitter.",
+    "path": "plugins/apipass-integrations/skills/apipass-agent-actions/SKILL.md"
+  },
+  {
+    "name": "apipass-gotchas",
+    "description": "Erros comuns e armadilhas ao construir fluxos na APIPASS e o fluxo de debug de execucao (analise de logs). Carregue ao depurar um erro de fluxo ou uma execucao que falhou.",
+    "path": "plugins/apipass-integrations/skills/apipass-gotchas/SKILL.md"
+  },
+  {
+    "name": "apipass-patterns",
+    "description": "Estrutura de um fluxo da APIPASS — montagem incremental, contadores lastGeneratedStepId/lastGeneratedLoopId, leitura da estrutura, versoes e publicacao (environment).",
+    "path": "plugins/apipass-integrations/skills/apipass-patterns/SKILL.md"
+  },
+  {
+    "name": "apipass-usage",
+    "description": "Analise de consumo/uso da APIPASS — execucoes e requisicoes por periodo, totais/medias da conta e uso do flow-engine. Carregue quando o usuario perguntar sobre \"consumo\", \"uso\", \"quanto consumi\", \"uso do mes\", \"consumo por fluxo/projeto\", \"uso do flow engine\", quota ou custo de execucoes.",
+    "path": "plugins/apipass-integrations/skills/apipass-usage/SKILL.md"
+  },
+  {
+    "name": "build-agent-flow",
+    "description": "Construir ou modificar fluxos de AGENTE DE IA na APIPASS (Agent Builder). Use quando o pedido envolve um agente de IA, RAG ou base de conhecimento — \"crie um agente de IA que...\", \"agente que analisa/responde...\", \"chatbot com base de conhecimento\", \"fluxo de RAG\", \"ingestao para vector store\", \"agente que consulta o banco e responde\".\n\nPonto de entrada para fluxos com `.service.ai.AiAgent`, modelos LLM, memoria, tools, embeddings, vector store, document loaders e splitters. Carregue ANTES de montar os steps de IA. A mecanica compartilhada (trigger, stop, auth, versao, publish) e delegada a `/apipass-integrations:build-flow`.",
+    "path": "plugins/apipass-integrations/skills/build-agent-flow/SKILL.md"
+  },
+  {
+    "name": "build-flow",
+    "description": "Construir ou modificar fluxos de integracao na APIPASS. Use sempre que o usuario pedir para criar, construir ou alterar um fluxo — \"construa um fluxo que...\", \"crie uma integracao para...\", \"automatize X\", \"modifique o fluxo que...\".\n\nPonto de entrada para TODA construcao/modificacao de fluxo. Carregue ANTES de chamar create_flow / save_flow_development.",
+    "path": "plugins/apipass-integrations/skills/build-flow/SKILL.md"
+  },
+  {
+    "name": "create-action",
+    "description": "Criar uma custom action da APIPASS a partir da documentacao de uma API (OpenAPI/Swagger, doc HTML, cURL ou descricao). Use quando o usuario pedir \"crie uma action a partir desta doc\", \"transforme este endpoint em uma action\", \"gere uma action de API\", \"importe este OpenAPI como actions\".\n\nPonto de entrada para CRIAR/EDITAR custom action. Carregue ANTES de chamar create_custom_action / update_custom_action.",
+    "path": "plugins/apipass-integrations/skills/create-action/SKILL.md"
+  },
+  {
+    "name": "diff-versions",
+    "description": "Comparar versoes de um fluxo APIPASS — ver o que mudou entre versoes, listar historico de versoes, auditar alteracoes em steps. Use sempre que o usuario pedir para comparar versoes, ver diferencas entre versoes, ver o que mudou em um fluxo, auditar historico de alteracoes, ou listar versoes de um fluxo.\n\nCarregue ANTES de chamar list_flow_versions / get_version.",
+    "path": "plugins/apipass-integrations/skills/diff-versions/SKILL.md"
+  },
+  {
+    "name": "document-flows",
+    "description": "Gerar documentacao de integracoes (Word/PDF) a partir dos fluxos de um projeto APIPASS.\nUse quando o usuario pedir \"documente os fluxos do projeto X\", \"gere a documentacao de\nintegracao\", \"PDF dos fluxos do cliente Y\", \"documento tecnico das integracoes\",\n\"gerador de documentacao\", \"documento ABNT\", \"documento tecnico-funcional\".",
+    "path": "plugins/apipass-integrations/skills/document-flows/SKILL.md"
+  },
+  {
+    "name": "research-action",
+    "description": "Processo para pesquisar uma acao do catalogo da APIPASS — descobrir o type exato, a autenticacao e o shape do mappingAttributes antes de montar um passo do fluxo.",
+    "path": "plugins/apipass-integrations/skills/research-action/SKILL.md"
+  },
+  {
+    "name": "review-flow",
+    "description": "Audita um fluxo APIPASS contra boas práticas e convenções da plataforma — arquitetura, tratamento de erros, autorização e credenciais, código NodeJS, queries SQL, nomenclatura, variáveis de environment, sincronismo e persistência. Use quando o usuário pedir para revisar, auditar, checar ou analisar um fluxo — \"revise o fluxo X\", \"tem algo errado neste fluxo?\", \"analise a arquitetura do fluxo\", \"verifique boas práticas\", \"code review do fluxo\", \"o que pode melhorar neste fluxo\".",
+    "path": "plugins/apipass-integrations/skills/review-flow/SKILL.md"
+  },
+  {
+    "name": "set-account",
+    "description": "Como informar a conta APIPASS (accountName) que resolve o realm do Keycloak no login. No servidor hospedado, a conta vai como argumento do apipass_login (por usuario/sessao).",
+    "path": "plugins/apipass-integrations/skills/set-account/SKILL.md"
+  }
+]

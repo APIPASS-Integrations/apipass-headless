@@ -1,5 +1,16 @@
 # Changelog — apipass-integrations
 
+## 0.19.0
+### Adicionado
+- **Repositorio passa a ser a fonte de verdade tambem para o copiloto embarcado no console (harness TrueForge).** Nova pasta `plugins/apipass-integrations/harness/`:
+  - `system-prompt.md` — system prompt do agente `apipass-integrations` que roda no TrueForge. Derivado de `build-flow`, `apipass-patterns`, `apipass-gotchas` e das regras do hook `confirm-publish.js`. Cobre papel e idioma (pt-BR); o contexto de usuario ja autenticado pelo console (sem `apipass_login`/`apipass_auth_status`/`apipass_logout`); quando carregar cada uma das 13 skills via `list_skills`/`load_skill` (uma linha por skill; `set-account` nunca, `document-flows` so como roteiro de conteudo enquanto nao ha sandbox); a regra de confirmacao humana antes de operacoes com efeito real, ampliada para as 21 tools da lista `DESTRUCTIVE_TOOLS` do servidor MCP; e o formato de resposta curto.
+  - `agent.json` — spec do agente no formato `AgentSpec` do TrueForge (`model`, `instructions`, `mcp_servers[]` com `enable_tools: ["@all"]`, `require_approval_for_tools` = `DESTRUCTIVE_TOOLS`, `preload: false`; `config` com sandbox desligado, subagentes dinamicos, perguntas ao usuario e generative UI ligados, `iteration_limit: 50`). Valores de ambiente ficam como placeholders (`${MODEL_NAME}`, `${file:./system-prompt.md}`) resolvidos no bootstrap — sem segredos nem URLs internas.
+  - `README.md` da pasta explicando os placeholders e a regra de manter `require_approval_for_tools` igual a `DESTRUCTIVE_TOOLS`.
+- **Manifesto de skills `plugins/apipass-integrations/skills/index.json`** (`[{ name, description, path }]`, ordenado por nome, `path` relativo a raiz do repo) gerado por `scripts/skills-manifest.js` a partir dos frontmatters dos `SKILL.md` — Node puro, sem dependencias, com parser dos blocos `|`/`>` do YAML usado nas skills. E o que as tools `list_skills`/`load_skill` do servidor MCP vao servir a partir de uma tag deste repositorio.
+- **`package.json` na raiz** com os scripts `skills:manifest` (gera), `skills:manifest:check` (falha se o `index.json` estiver desatualizado) e `harness:check` (valida que `agent.json` e JSON valido).
+- **Workflow do GitHub Actions `.github/workflows/skills-manifest.yml`** rodando `skills:manifest:check` e `harness:check` em PRs que tocam skills, harness, scripts ou `package.json`, e em push na `main`.
+- README: estrutura do repositorio e convencao de rodar `npm run skills:manifest` ao mexer em skills.
+
 ## 0.18.2
 ### Corrigido
 - **`coreRouteType` com valor errado-mas-plausivel (sufixo `_UTILITY`) trava a execucao indefinidamente sem erro, em steps `.service.actions.Action` de Data Store.** Diferente do campo ausente (falha rapido com "Method and URL are required"), um valor plausivel como `PROJECT_STORE_GET_UTILITY` (copiado do label i18n `ACTIONS.DATA_STORE.PROJECT_STORE_GET_UTILITY`) faz o engine tentar resolver uma rota inexistente e ficar `RUNNING` para sempre. O `coreRouteType` correto e o actionId puro, sem sufixo (`PROJECT_STORE_GET`) — confirme sempre com `get_action(groupId, id)`. Reproduzido de forma consistente em PROJECT_STORE_GET/SET e ACCOUNT_STORE_GET/SET. Documentado em `apipass-patterns` e `apipass-gotchas`.

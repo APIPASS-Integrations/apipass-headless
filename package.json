@@ -1,0 +1,14 @@
+{
+  "name": "apipass-plugins",
+  "private": true,
+  "description": "Marketplace de plugins APIPASS Headless para Claude Code. Scripts de manutencao do repositorio (Node puro, sem dependencias).",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "skills:manifest": "node scripts/skills-manifest.js",
+    "skills:manifest:check": "node scripts/skills-manifest.js --check",
+    "harness:check": "node -e \"JSON.parse(require('fs').readFileSync('plugins/apipass-integrations/harness/agent.json', 'utf8')); console.log('harness/agent.json: JSON valido')\""
+  }
+}

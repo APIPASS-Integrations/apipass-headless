@@ -1,0 +1,26 @@
+name: skills-manifest
+
+on:
+  pull_request:
+    paths:
+      - 'plugins/apipass-integrations/skills/**'
+      - 'plugins/apipass-integrations/harness/**'
+      - 'scripts/**'
+      - 'package.json'
+      - '.github/workflows/skills-manifest.yml'
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    name: index.json atualizado e agent.json valido
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verificar skills/index.json
+        run: npm run skills:manifest:check
+      - name: Validar harness/agent.json
+        run: npm run harness:check

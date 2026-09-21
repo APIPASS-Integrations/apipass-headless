@@ -215,6 +215,74 @@ const { campo } = $.trigger.body;
 
 ---
 
+## RunChildFlow — orquestrador + subfluxos
+
+`RunChildFlowUtility` chama outro fluxo publicado diretamente (sincrono ou assincrono), sem fila —
+diferente do padrao AMS acima (que desacopla via mensagem). Use para orquestrar o processamento de
+uma LISTA de itens (arquivos, diretorios, entidades) distribuindo cada item para um subfluxo.
+
+### Decisao de arquitetura: subfluxo DEDICADO por item vs. subfluxo GENERICO reaproveitado
+Duas formas validas de montar "1 orquestrador processa N itens de uma lista" — a escolha NAO e
+obvia a partir de um enunciado generico como "processar os arquivos", e ja foi corrigida ao vivo
+por um cliente depois de eu montar a arquitetura errada por padrao:
+
+| Criterio | Subfluxo DEDICADO por item (1 flowId por item) | Subfluxo GENERICO (1 flowId, parametrizado pelo payload) |
+|---|---|---|
+| Falha num item bloqueia/atrasa os outros? | Nao — fila e historico de execucao SEPARADOS por item | Sim/depende — historico de execucao MISTURADO (dificil isolar "so o item X falhou" no log) |
+| Reprocessar so o item que falhou? | Trivial — reexecuta so aquele flowId | Mais dificil — precisa filtrar execucoes daquele flowId pelo payload |
+| Quantos itens (tipico)? | Poucos e estaveis (ex. ate ~10-15 diretorios/entidades fixas conhecidas) | Muitos ou dinamicos (ex. lista que cresce, N desconhecido em design-time) |
+| Custo de manutencao | N fluxos quase identicos (so muda o parametro fixo, ex. nome do diretorio) | 1 fluxo so |
+| Perguntar ao usuario? | **Sim, sempre que a lista de itens for pequena/fixa e o usuario mencionar "isolamento", "reprocessar so um", ou nao deixar claro** — nao assuma generico so porque e menos codigo | — |
+
+**Regra pratica:** se o usuario disser algo como "quero poder reprocessar so o arquivo que falhar"
+ou "um erro num nao pode travar os outros", isso decide por DEDICADO — nao pergunte de novo, va
+direto pra essa arquitetura. Se a lista de itens for grande/dinamica (dezenas+, ou gerada em
+runtime sem tamanho fixo), DEDICADO nao escala (N fluxos pra manter) — prefira GENERICO ou AMS
+(fan-out via fila, ver secao acima). Na duvida com lista pequena e fixa, pergunte explicitamente
+qual das duas o usuario quer ANTES de construir — nao assuma.
+
+### Shape — Switch + RunChildFlow dedicado dentro de um Loop
+Padrao para N subfluxos dedicados, roteados pelo valor de um campo do item:
+```json
+{
+  "id": "l0a1", "label": "Rotear por Item", "type": ".utility.switchutility.SwitchUtility",
+  "default": "ItemPadrao", "defaultStepId": "l0aN", "defaultStepType": ".utility.runChildFlow.RunChildFlowUtility",
+  "cases": [
+    { "label": "ItemA", "targetStepId": "l0a2", "targetStepType": ".utility.runChildFlow.RunChildFlowUtility",
+      "groups": [{ "rules": [{ "input": "{{$.l0.data.chave}}", "condition": "TEXT_MATCHES", "expected": "ITEM_A" }] }] }
+  ],
+  "nextSteps": [
+    { "id": "l0a2", "type": ".utility.runChildFlow.RunChildFlowUtility", "sourceUUID": "integration-step-uuid-sourceEndpoint-l0a1", "targetUUID": "integration-step-uuid-targetEndpoint-l0a2" }
+  ]
+}
+```
+```json
+{
+  "id": "l0a2", "label": "Processar ItemA", "type": ".utility.runChildFlow.RunChildFlowUtility",
+  "flowId": "<flowId do subfluxo dedicado a ItemA>",
+  "async": true,
+  "rawData": "{{$.l0.data}}",
+  "triggerMediaType": "application/json",
+  "nextSteps": [{ "id": "l0999", "type": ".StopLoop", "sourceUUID": "integration-step-uuid-sourceEndpoint-l0a2", "targetUUID": "integration-step-uuid-targetEndpoint-l0999", "state": "LINKED" }]
+}
+```
+- **`async: true` e o padrao recomendado** quando o orquestrador so precisa disparar e seguir
+  (fire-and-forget) — evita que uma lentidao num subfluxo trave o disparo dos demais. So use
+  `async: false` (sincrono) se o orquestrador precisa do RESULTADO do subfluxo pra decidir o proximo
+  passo.
+- O subfluxo recebe o payload via `.trigger.childflow.ChildFlowTrigger` — o valor de `rawData` do
+  step chamador chega em `$.trigger.body` no subfluxo (normalize com o mesmo padrao NodeJS de
+  `/apipass-integrations:apipass-gotchas`, "Em modo TEST o payload chega em `$.trigger`...").
+
+### Gotcha de plataforma — RunChildFlow que para de disparar um flowId especifico
+Ver `/apipass-integrations:apipass-gotchas` (tabela principal) para o sintoma e a correcao —
+resumo: se UM flowId especifico simplesmente nao dispara via RunChildFlow (nem sync nem async,
+sem erro), mas clones identicos disparam normal e o mesmo flow funciona via `run_test_flow`
+direto, suspeite de estado corrompido preso aquele flowId (tipico apos muitos `stop_execution`/
+republicacoes seguidas durante debug) — recriar o fluxo com um flowId novo resolve.
+
+---
+
 ## AOS — Apipass Object Store (persistencia MongoDB)
 
 O AOS e o banco de dados nativo da APIPASS, baseado em MongoDB. Permite persistir, buscar e atualizar dados diretamente nos fluxos sem infra externa.

@@ -4,7 +4,8 @@ description: |
   Gerar documentacao de integracoes (Word/PDF) a partir dos fluxos de um projeto APIPASS.
   Use quando o usuario pedir "documente os fluxos do projeto X", "gere a documentacao de
   integracao", "PDF dos fluxos do cliente Y", "documento tecnico das integracoes",
-  "gerador de documentacao", "documento ABNT", "documento tecnico-funcional".
+  "gerador de documentacao", "documento ABNT", "documento tecnico-funcional", "doc com C4
+  da arquitetura".
 disable-model-invocation: false
 argument-hint: "[nome-do-projeto]"
 ---
@@ -19,7 +20,8 @@ Estrutura do entregavel (padrao do "doc SAP de referencia"):
 ```
 CAPA            -> nome APIPASS, projeto/cliente, versao, data, sistemas integrados
 1. Visao Geral  -> prosa + tabela indice (fluxo, acionamento, nº de steps)
-2..N. Por fluxo -> descricao + informacoes tecnicas + tabela de etapas
+2. Arquitetura da Solucao (opcional) -> padrao arquitetural + diagramas C4 (ver secao 7.4)
+3..N. Por fluxo -> descricao + informacoes tecnicas + tabela de etapas
 Final. Tratamento de Erros e Resiliencia
 ```
 
@@ -31,6 +33,11 @@ Se faltarem, pergunte numa unica mensagem (use `AskUserQuestion`):
   **nunca** use nome hardcoded de cliente anterior.
 - **Organizacao** — um documento por projeto / um consolidado / por categoria.
 - **Incluir diagramas de sequencia?** — sim / nao.
+- **Incluir diagrama de arquitetura C4 (Contexto/Container)?** — sim / nao. Pedido explicito
+  tipico: "doc com C4 da arquitetura", "documenta os fluxos com o diagrama de arquitetura".
+  Ver secao 7.4 — e um entregavel DIFERENTE do diagrama de sequencia (secao 7.1-7.3): C4 mostra
+  os sistemas/fluxos e como se conectam, sequencia mostra a ordem de chamadas dentro de 1 fluxo.
+  Nada impede pedir os dois no mesmo documento.
 
 ## 2. Coletar os fluxos via MCP
 
@@ -291,6 +298,59 @@ new Paragraph({
   alignment: AlignmentType.CENTER,
   spacing: { before: 80, after: 80 },
 })
+```
+
+### 7.4 Diagramas C4 (Contexto/Container) — arquitetura da solucao
+
+Quando o usuario pedir "C4 da arquitetura" junto com a doc dos fluxos, gere os diagramas com o
+MESMO pipeline SVG -> PNG (`@resvg/resvg-js`) -> `ImageRun` das secoes 7.1/7.3 — nao tem
+dependencia de Mermaid/Draw.io nem de nenhuma outra skill. Coloque-os numa secao propria
+"2. Arquitetura da Solucao", ANTES das secoes por fluxo (ver estrutura do entregavel no topo
+deste arquivo).
+
+**Niveis a gerar (minimo):**
+- **Contexto (C4 nivel 1):** o acionador (scheduler/webhook), a APIPASS como uma unica caixa, e
+  os sistemas externos (origem/destino) — 1 diagrama simples, poucas caixas.
+- **Container (C4 nivel 2):** dentro do "boundary" da APIPASS (retangulo tracejado com o nome do
+  projeto), cada fluxo publicado vira uma caixa; setas para os mesmos sistemas externos do nivel 1.
+
+**Convencao de cores (usar sempre, mantem os diagramas reconheciveis entre projetos):**
+- Acionador (scheduler/webhook/trigger): retangulo com gradiente AZUL (`#3B5A8A` -> `#1F3C70`).
+- Sistema de origem (de onde os dados vem): gradiente VERDE escuro (`#2E7D4F` -> `#1B5E38`).
+- APIPASS / fluxo APIPASS: caixa BRANCA sem preenchimento, borda oliva `#c6d81f` (stroke-width 3),
+  texto navy `#2e2b75` — imita o logo, nunca usar gradiente aqui.
+- Sistema de destino/consumidor: verde CLARO (`#c8e6c9`, borda `#66bb6a`).
+- Sempre incluir uma legenda no rodape do SVG (retangulos pequenos + texto) com esses 4 papeis.
+- `font-family` sempre com fonte real (`Arial, sans-serif`) — nunca `var(--algo)`, o SVG e
+  renderizado isolado sem CSS da pagina (mesma regra da secao 7.1).
+
+**No diagrama de Container, quando ha varios fluxos quase identicos (ex. N subfluxos dedicados,
+1 por item de uma lista, todos com a mesma estrutura interna):** NAO desenhe uma seta separada de
+cada subfluxo para cada sistema externo (vira um emaranhado ilegivel). Desenhe uma linha
+horizontal "bracket" ligando a base de todas as caixas dos subfluxos, com uma unica seta saindo
+dela para cada sistema externo compartilhado — reduz N×2 setas para 2. Mesmo assim, desenhe as N
+caixas dos subfluxos individualmente (com nome e steps resumidos de cada uma) — o objetivo do C4
+aqui e mostrar a arquitetura real implementada, nao uma generalizacao que esconda quantos fluxos
+existem.
+
+**Diferenca importante em relacao a outras skills que tambem geram C4:** se o pedido for para uma
+PROPOSTA (Confluence), use a skill de proposta tecnica (embute o SVG como `<img
+src="data:image/svg+xml;base64,...">` direto no HTML da pagina, formato proprio do Confluence).
+Para a DOC de fluxos (`.docx`, este arquivo), o C4 e sempre PNG embutido via `ImageRun` — mesmo
+mecanismo da secao 7.3, so muda o conteudo do SVG (arquitetura, nao sequencia de mensagens).
+
+Exemplo de caixa de container (reaproveitavel; ajuste texto/posicao):
+```javascript
+// caixa de fluxo/sistema com o padrao de cores acima
+function caixaContainer(x, y, w, h, titulo, linhas, cor) {
+  const fills = {
+    trigger: 'url(#blueGrad)',
+    origem:  'url(#greenGrad)',
+    apipass: 'fill="#FFFFFF" stroke="#c6d81f" stroke-width="3"',
+    destino: 'fill="#c8e6c9" stroke="#66bb6a" stroke-width="2"',
+  };
+  // <rect x=x y=y width=w height=h rx="8" .../> + <text> titulo + linhas centralizados
+}
 ```
 
 ## Observacoes

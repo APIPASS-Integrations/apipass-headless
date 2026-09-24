@@ -116,5 +116,36 @@ Aponte o Claude Code para a sua copia local em vez do repositorio remoto:
 
 Depois de editar uma skill, agente ou hook, rode `/reload-plugins` para recarregar sem reinstalar.
 
+**Nunca edite ou faça `git checkout` de uma branch de feature dentro da pasta que o Claude Code já usa como marketplace instalado** (`~/.claude/plugins/marketplaces/<nome>`). Essa pasta é a fonte de runtime que vale para *todos* os seus projetos na máquina — se ela ficar parada numa branch de dev depois que você terminar, o plugin fica preso naquela versão indefinidamente, e o botão "Atualizar" do Claude Code não avisa (ele só compara com o que já está local, não busca o remoto sozinho). Use sempre uma copia separada (`/caminho/para/apipass-plugins` acima) para editar e testar.
+
+Se em algum momento você editar/testar direto na pasta do marketplace instalado mesmo assim, **antes de encerrar a sessão**, devolva-a para o estado correto:
+
+```bash
+cd ~/.claude/plugins/marketplaces/<nome>
+git checkout main
+git pull origin main
+```
+
+### Sincronizando o fork antes de uma nova branch
+O `main` do seu fork pode ficar dezenas de commits atrasado em relacao ao `upstream` (`APIPASS-Integrations/apipass-headless`) se voce nao sincronizar com frequencia. Antes de criar uma branch nova:
+
+```bash
+git fetch upstream
+git checkout main
+git merge --ff-only upstream/main
+git push origin main
+```
+
+Crie a branch nova a partir desse `main` ja sincronizado (`git checkout -b <branch> main`) — nunca empilhada em cima de outra branch/PR ainda aberta.
+
+### Abrindo o PR
+Push para o seu fork (`origin`) e abra a PR **contra o repositorio oficial**, nunca contra o `main` do seu proprio fork:
+
+```bash
+gh pr create --repo APIPASS-Integrations/apipass-headless --base main --head <seu-usuario>:<branch>
+```
+
+Depois que a PR for aprovada e mergeada (isso e manual, no GitHub — nao ha aviso automatico), sincronize o fork novamente (passo acima) e, se voce tinha usado a pasta do marketplace instalado para testar, devolva-a para `main` + `pull` tambem.
+
 ## Suporte
 Problemas de login (`invalid redirect_uri`, `client not found`) sao de cadastro do client no Keycloak; 401/403 vem do gateway. Fale com o time de plataforma.

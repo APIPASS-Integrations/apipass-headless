@@ -129,10 +129,23 @@ O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). I
 { "id": "l1a9", "label": "Parar Loop", "type": ".utility.loop.BreakLoop", "image": "break-loop",
   "authProvider": "", "valid": true, "nodeSize": "small", "positionX": 8592, "positionY": 8572 }
 ```
-- Fica dentro de `loopSteps` e e terminal: **sem `nextSteps`** e sem `failOnError`/`mappingAttributes`/demais campos obrigatorios dos steps comuns. O esperado e que, ao executar, ele encerre o loop inteiro e o fluxo siga para o `nextSteps` do proprio `LoopCanvas` (o shape acima e confirmado pela UI; o comportamento em execucao ainda nao foi validado).
+- Fica dentro de `loopSteps` e e terminal: **sem `nextSteps`** e sem `failOnError`/`mappingAttributes`/demais campos obrigatorios dos steps comuns. Ao executar, encerra o loop e o fluxo segue para o `nextSteps` do proprio `LoopCanvas` — validado em execucao real (retry com `TIMES` 3, saida pelo BreakLoop do ramo de erro na ultima tentativa). Ainda nao observado: a saida antecipada em uma iteracao intermediaria (ex. sucesso na 1a tentativa), que e o comportamento esperado.
 - O step anterior aponta para ele normalmente: `{ "id": "l1a9", "type": ".utility.loop.BreakLoop", "sourceUUID": "...sourceEndpoint-l1a0", "targetUUID": "...targetEndpoint-l1a9" }` (sem `state`).
 - Seu id conta para o `lastGeneratedStepId` do loop como qualquer outro step do corpo.
 - Uso tipico: retry com `loopType: "TIMES"`, em que a tentativa bem-sucedida (ou um erro nao retentavel) sai do loop antes de esgotar as iteracoes.
+
+**Delay (`DELAY`) — pausa a execucao por N milissegundos.** E uma acao de catalogo (grupo `DEVELOPERTOOLS` em `list_actions`), nao um tipo fixo. Shape validado em execucao real (dentro de um `LoopCanvas`, esperando entre tentativas de um retry):
+```json
+{ "id": "l1a7", "label": "Aguarda backoff", "type": ".service.actions.Action",
+  "actionId": "DELAY", "coreRouteType": "DELAY_UTILITY",
+  "image": "https://s3.amazonaws.com/flow-manager-api-prd/actions/logo/DELAY.png",
+  "additionalConfiguration": true, "failOnError": false,
+  "inputData": { "timeinMilliseconds": "{{$.l1a5.body.delayMs}}" },
+  "nextSteps": [{ "id": "l1999", "type": ".StopLoop", "state": "LINKED", "sourceUUID": "...sourceEndpoint-l1a7", "targetUUID": "...targetEndpoint-l1999" }] }
+```
+- O campo e **`timeinMilliseconds`** (com `i` minusculo em `in`, exatamente como no `get_action_struct("DELAY")`), string, aceita interpolacao; nao confunda com o `timeInMilliseconds` do **output**.
+- A aresta que chega nele leva `coreRouteType: "DELAY_UTILITY"` (e, vindo de um Switch, `defaultStepCoreRouteType`/`targetStepCoreRouteType: "DELAY_UTILITY"`).
+- Padrao de retry com backoff: um NodeJS calcula o delay (ex. jitter entre um minimo e um teto) e exporta `delayMs`; o Delay le `{{$.<nodejs>.body.delayMs}}` e liga ao `.StopLoop` para a proxima iteracao.
 
 ### Tipos fixos canonicos (NUNCA invente o `type`)
 Esses steps "fixos" existem no catalogo (`list_actions`) — mas atencao ao **grupo**, que NAO bate com o rotulo visual. Filtrar pelo nome errado faz o catalogo parecer vazio e leva a inventar um `type` que o engine aceita no save mas a **UI nao abre**. Os types corretos:

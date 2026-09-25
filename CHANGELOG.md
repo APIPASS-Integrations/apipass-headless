@@ -3,6 +3,7 @@
 ## 0.18.4
 ### Corrigido
 - **Regra do contador `lastGeneratedStepId` na skill `build-flow` alinhada com as demais skills.** A secao 2b dizia "maior numero sufixo dos steps regulares" (a0,a1,a2 -> 2), contradizendo `apipass-patterns`, `apipass-gotchas` e o item C2 de `review-flow`, que ja documentavam `max + 1`. Corrigido para **maior sufixo dos steps regulares + 1, sem contar o `a999`** (a0,a1,a2,a999 -> 3), explicitando que ids de `loopSteps` (`l1a0`...) nao entram na conta e que, ao editar um fluxo existente, o contador atual deve ser conferido com `get_flow_info` (pode estar a frente por steps removidos) para nao reutilizar ids. A nota da secao 4 (validacao no save) tambem passou a apontar para a regra `max + 1`. Detectado num save real do projeto Metalfrio, em que o fluxo ficou com o contador igual ao maior id.
+- **`lastGeneratedStepId` do proprio step `LoopCanvas` documentado em `build-flow`.** O loop tem um contador proprio dos ids do corpo (`loopSteps`), no nivel do step (ao lado de `loopType`), com a mesma regra do fluxo: maior sufixo + 1, sem contar `l1StartLoop`/`l1999` (`l1a0`..`l1a8` -> 9). A skill nao mencionava o campo e o exemplo de `LoopCanvas` nao o trazia, entao loops criados via MCP ficavam sem ele; exemplo atualizado e regra da secao 2b com referencia cruzada.
 
 ## 0.18.3
 ### Adicionado

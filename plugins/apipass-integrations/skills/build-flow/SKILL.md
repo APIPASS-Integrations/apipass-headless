@@ -34,7 +34,7 @@ Siga os padroes abaixo ao montar o array de steps. Nunca invente IDs, tipos ou i
 - Trigger sempre: `id: "trigger"`
 - Steps sequenciais: `id: "a0"`, `"a1"`, `"a2"`, etc.
 - Step de fim sempre: `id: "a999"`
-- `lastGeneratedStepId` = **maior numero sufixo dos steps regulares + 1**, SEM contar o `a999` (Fim, sentinela). Ex.: a0,a1,a2,a999 → `lastGeneratedStepId: 3`. Ids de steps dentro de `loopSteps` (`l1a0`...) nao entram nessa conta. Ao editar um fluxo existente, confira antes o contador atual com `get_flow_info` — se ja estiver a frente (steps removidos), numere os steps novos a partir dele para nao reutilizar ids
+- `lastGeneratedStepId` = **maior numero sufixo dos steps regulares + 1**, SEM contar o `a999` (Fim, sentinela). Ex.: a0,a1,a2,a999 → `lastGeneratedStepId: 3`. Ids de steps dentro de `loopSteps` (`l1a0`...) nao entram nessa conta — o loop tem o seu PROPRIO `lastGeneratedStepId`, com a mesma regra (ver secao "Loop" abaixo). Ao editar um fluxo existente, confira antes o contador atual com `get_flow_info` — se ja estiver a frente (steps removidos), numere os steps novos a partir dele para nao reutilizar ids
 
 ### Trigger scheduler
 ```json
@@ -100,6 +100,7 @@ O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). I
 - `loopType: "EACH_ITEM"` — **sem esse campo, a UI pode ATÉ mostrar "Item de Array" no dropdown "Tipo de Loop" (valor de exibição/default), mas a configuração real não fica persistida e a execução roda indefinidamente** (nunca termina o loop). Sempre setar explicitamente.
 - `source: "{{$.aN.body}}"` — o array a iterar. **É esse campo que a UI lê para o campo "Origem"** quando `loopType` está configurado — não `valid`. Se só `valid` for preenchido (sem `loopType`), o campo "Origem" aparece vazio na UI mesmo com o step salvo.
 - `valid: "{{$.aN.body}}"` (mesmo valor de `source`) — mantenha os dois preenchidos com o mesmo array; fluxos de referência reais têm ambos os campos, redundantes.
+- `lastGeneratedStepId` **no proprio step do loop** (nivel do `LoopCanvas`, ao lado de `loopType`) — contador dos ids do corpo, com a MESMA regra do contador do fluxo: **maior sufixo dos steps de `loopSteps` + 1**, sem contar `l1StartLoop`/`l1999` (ex.: `l1a0`..`l1a8` → `lastGeneratedStepId: 9`). E independente do `lastGeneratedStepId` do fluxo (os ids `l1aN` nao entram na conta do fluxo, e os `aN` nao entram na do loop). Sempre preencher ao criar ou editar um loop.
 - Cada step dentro de `loopSteps` (incluindo `l1StartLoop` e `l1999`) também precisa de `previousSteps` (ver seção "Conexões entre steps" abaixo) e de `positionX`/`positionY` — sem isso, o sub-canvas do loop não renderiza os nós ao abrir o step na UI (mesmo bug do canvas principal, mas dentro do loop).
 
 ```json
@@ -111,6 +112,7 @@ O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). I
   "loopType": "EACH_ITEM",
   "source": "{{$.a3.body}}",
   "valid": "{{$.a3.body}}",
+  "lastGeneratedStepId": 1,
   "nextSteps": [{ "id": "a4", "type": "...", "sourceUUID": "integration-step-uuid-sourceEndpoint-l1", "targetUUID": "integration-step-uuid-targetEndpoint-a4" }],
   "loopSteps": [
     { "id": "l1StartLoop", "type": ".StartLoop", "image": "start", "label": "Início", "previousSteps": [], "positionX": 8043, "positionY": 8718,

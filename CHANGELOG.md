@@ -1,5 +1,9 @@
 # Changelog — apipass-integrations
 
+## 0.18.4
+### Corrigido
+- **Regra do contador `lastGeneratedStepId` na skill `build-flow` alinhada com as demais skills.** A secao 2b dizia "maior numero sufixo dos steps regulares" (a0,a1,a2 -> 2), contradizendo `apipass-patterns`, `apipass-gotchas` e o item C2 de `review-flow`, que ja documentavam `max + 1`. Corrigido para **maior sufixo dos steps regulares + 1, sem contar o `a999`** (a0,a1,a2,a999 -> 3), explicitando que ids de `loopSteps` (`l1a0`...) nao entram na conta e que, ao editar um fluxo existente, o contador atual deve ser conferido com `get_flow_info` (pode estar a frente por steps removidos) para nao reutilizar ids. A nota da secao 4 (validacao no save) tambem passou a apontar para a regra `max + 1`. Detectado num save real do projeto Metalfrio, em que o fluxo ficou com o contador igual ao maior id.
+
 ## 0.18.3
 ### Adicionado
 - **Diagramas C4 (Contexto/Container) na skill `document-flows`, secao 7.4.** Ate aqui a skill so cobria diagramas de sequencia (7.1-7.3); documentado o pipeline pra gerar diagrama de arquitetura no mesmo `.docx` (SVG proprio -> PNG via `@resvg/resvg-js` -> `ImageRun`, sem Mermaid/Draw.io), com convencao fixa de cores (acionador azul, origem verde escuro, APIPASS caixa branca com borda oliva, destino verde claro) e a tecnica de "bracket" horizontal pra nao poluir o diagrama quando ha N subfluxos quase identicos apontando pros mesmos sistemas externos. Nova pergunta de input na secao 1 ("incluir diagrama C4?"). Construido gerando a doc do projeto "Vale" (exportacao SoftExpert BI -> SFTP).

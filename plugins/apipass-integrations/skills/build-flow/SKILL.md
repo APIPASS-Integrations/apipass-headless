@@ -34,7 +34,7 @@ Siga os padroes abaixo ao montar o array de steps. Nunca invente IDs, tipos ou i
 - Trigger sempre: `id: "trigger"`
 - Steps sequenciais: `id: "a0"`, `"a1"`, `"a2"`, etc.
 - Step de fim sempre: `id: "a999"`
-- `lastGeneratedStepId` = maior numero sufixo dos steps regulares (ex: a0,a1,a2 → `lastGeneratedStepId: 2`)
+- `lastGeneratedStepId` = **maior numero sufixo dos steps regulares + 1**, SEM contar o `a999` (Fim, sentinela). Ex.: a0,a1,a2,a999 → `lastGeneratedStepId: 3`. Ids de steps dentro de `loopSteps` (`l1a0`...) nao entram nessa conta. Ao editar um fluxo existente, confira antes o contador atual com `get_flow_info` — se ja estiver a frente (steps removidos), numere os steps novos a partir dele para nao reutilizar ids
 
 ### Trigger scheduler
 ```json
@@ -308,7 +308,7 @@ Ao reconstruir ou **portar** um fluxo para OUTRA conta, lembre que custom action
 4. `save_flow_development(id, steps, lastGeneratedStepId, lastGeneratedLoopId, logEnabled, confirm: true)`.
 
 ## 4. Validacao (automatica no save)
-O `save_flow_development` valida ANTES de enviar e bloqueia em caso de erro (ids duplicados, `id`/`type` vazios, `lastGeneratedStepId` menor que o maior id de step). Corrija os erros listados e tente de novo. Campos obrigatorios com default seguro sao preenchidos automaticamente — confira os avisos.
+O `save_flow_development` valida ANTES de enviar e bloqueia em caso de erro (ids duplicados, `id`/`type` vazios, `lastGeneratedStepId` menor que o maior id de step — lembre que o valor correto e max + 1, ver secao 2b). Corrija os erros listados e tente de novo. Campos obrigatorios com default seguro sao preenchidos automaticamente — confira os avisos.
 
 ## 4b. Versionar e publicar (cadeia)
 A publicacao depende de uma versao, e a versao depende do save. Ordem:

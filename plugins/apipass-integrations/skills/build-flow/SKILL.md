@@ -34,7 +34,7 @@ Siga os padroes abaixo ao montar o array de steps. Nunca invente IDs, tipos ou i
 - Trigger sempre: `id: "trigger"`
 - Steps sequenciais: `id: "a0"`, `"a1"`, `"a2"`, etc.
 - Step de fim sempre: `id: "a999"`
-- `lastGeneratedStepId` = maior numero sufixo dos steps regulares (ex: a0,a1,a2 → `lastGeneratedStepId: 2`)
+- `lastGeneratedStepId` = **maior numero sufixo dos steps regulares + 1**, SEM contar o `a999` (Fim, sentinela). Ex.: a0,a1,a2,a999 → `lastGeneratedStepId: 3`. Ids de steps dentro de `loopSteps` (`l1a0`...) nao entram nessa conta — o loop tem o seu PROPRIO `lastGeneratedStepId`, com a mesma regra (ver secao "Loop" abaixo). Ao editar um fluxo existente, confira antes o contador atual com `get_flow_info` — se ja estiver a frente (steps removidos), numere os steps novos a partir dele para nao reutilizar ids
 
 ### Trigger scheduler
 ```json
@@ -100,6 +100,7 @@ O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). I
 - `loopType: "EACH_ITEM"` — **sem esse campo, a UI pode ATÉ mostrar "Item de Array" no dropdown "Tipo de Loop" (valor de exibição/default), mas a configuração real não fica persistida e a execução roda indefinidamente** (nunca termina o loop). Sempre setar explicitamente.
 - `source: "{{$.aN.body}}"` — o array a iterar. **É esse campo que a UI lê para o campo "Origem"** quando `loopType` está configurado — não `valid`. Se só `valid` for preenchido (sem `loopType`), o campo "Origem" aparece vazio na UI mesmo com o step salvo.
 - `valid: "{{$.aN.body}}"` (mesmo valor de `source`) — mantenha os dois preenchidos com o mesmo array; fluxos de referência reais têm ambos os campos, redundantes.
+- `lastGeneratedStepId` **no proprio step do loop** (nivel do `LoopCanvas`, ao lado de `loopType`) — contador dos ids do corpo, com a MESMA regra do contador do fluxo: **maior sufixo dos steps de `loopSteps` + 1**, sem contar `l1StartLoop`/`l1999` (ex.: `l1a0`..`l1a8` → `lastGeneratedStepId: 9`). E independente do `lastGeneratedStepId` do fluxo (os ids `l1aN` nao entram na conta do fluxo, e os `aN` nao entram na do loop). Sempre preencher ao criar ou editar um loop.
 - Cada step dentro de `loopSteps` (incluindo `l1StartLoop` e `l1999`) também precisa de `previousSteps` (ver seção "Conexões entre steps" abaixo) e de `positionX`/`positionY` — sem isso, o sub-canvas do loop não renderiza os nós ao abrir o step na UI (mesmo bug do canvas principal, mas dentro do loop).
 
 ```json
@@ -111,6 +112,7 @@ O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). I
   "loopType": "EACH_ITEM",
   "source": "{{$.a3.body}}",
   "valid": "{{$.a3.body}}",
+  "lastGeneratedStepId": 1,
   "nextSteps": [{ "id": "a4", "type": "...", "sourceUUID": "integration-step-uuid-sourceEndpoint-l1", "targetUUID": "integration-step-uuid-targetEndpoint-a4" }],
   "loopSteps": [
     { "id": "l1StartLoop", "type": ".StartLoop", "image": "start", "label": "Início", "previousSteps": [], "positionX": 8043, "positionY": 8718,
@@ -122,6 +124,29 @@ O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). I
 }
 ```
 
+**"Parar Loop" (`.utility.loop.BreakLoop`) — use o shape que a UI gera, NAO o `stepSkeleton` do catalogo.** O skeleton de `list_actions` (grupo `loop`) traz so `type`/`mappingAttributes`, sem `image`; um BreakLoop montado a partir dele (sem `image`, com `nextSteps: []` e campos genericos de step) e aceito no save, mas nao e o conector que o canvas cria, e teve de ser recriado na UI. Shape real, confirmado num fluxo criado pelo canvas:
+```json
+{ "id": "l1a9", "label": "Parar Loop", "type": ".utility.loop.BreakLoop", "image": "break-loop",
+  "authProvider": "", "valid": true, "nodeSize": "small", "positionX": 8592, "positionY": 8572 }
+```
+- Fica dentro de `loopSteps` e e terminal: **sem `nextSteps`** e sem `failOnError`/`mappingAttributes`/demais campos obrigatorios dos steps comuns. Ao executar, encerra o loop inteiro (as iteracoes restantes nao rodam) e o fluxo segue para o `nextSteps` do proprio `LoopCanvas` — validado em execucao real num retry com `TIMES` 3: com sucesso na 1a tentativa o loop terminou ja na 1a iteracao, e no ramo de erro saiu pelo BreakLoop da ultima tentativa.
+- O step anterior aponta para ele normalmente: `{ "id": "l1a9", "type": ".utility.loop.BreakLoop", "sourceUUID": "...sourceEndpoint-l1a0", "targetUUID": "...targetEndpoint-l1a9" }` (sem `state`).
+- Seu id conta para o `lastGeneratedStepId` do loop como qualquer outro step do corpo.
+- Uso tipico: retry com `loopType: "TIMES"`, em que a tentativa bem-sucedida (ou um erro nao retentavel) sai do loop antes de esgotar as iteracoes.
+
+**Delay (`DELAY`) — pausa a execucao por N milissegundos.** E uma acao de catalogo (grupo `DEVELOPERTOOLS` em `list_actions`), nao um tipo fixo. Shape validado em execucao real (dentro de um `LoopCanvas`, esperando entre tentativas de um retry):
+```json
+{ "id": "l1a7", "label": "Aguarda backoff", "type": ".service.actions.Action",
+  "actionId": "DELAY", "coreRouteType": "DELAY_UTILITY",
+  "image": "https://s3.amazonaws.com/flow-manager-api-prd/actions/logo/DELAY.png",
+  "additionalConfiguration": true, "failOnError": false,
+  "inputData": { "timeinMilliseconds": "{{$.l1a5.body.delayMs}}" },
+  "nextSteps": [{ "id": "l1999", "type": ".StopLoop", "state": "LINKED", "sourceUUID": "...sourceEndpoint-l1a7", "targetUUID": "...targetEndpoint-l1999" }] }
+```
+- O campo e **`timeinMilliseconds`** (com `i` minusculo em `in`, exatamente como no `get_action_struct("DELAY")`), string, aceita interpolacao; nao confunda com o `timeInMilliseconds` do **output**.
+- A aresta que chega nele leva `coreRouteType: "DELAY_UTILITY"` (e, vindo de um Switch, `defaultStepCoreRouteType`/`targetStepCoreRouteType: "DELAY_UTILITY"`).
+- Padrao de retry com backoff: um NodeJS calcula o delay (ex. jitter entre um minimo e um teto) e exporta `delayMs`; o Delay le `{{$.<nodejs>.body.delayMs}}` e liga ao `.StopLoop` para a proxima iteracao.
+
 ### Tipos fixos canonicos (NUNCA invente o `type`)
 Esses steps "fixos" existem no catalogo (`list_actions`) — mas atencao ao **grupo**, que NAO bate com o rotulo visual. Filtrar pelo nome errado faz o catalogo parecer vazio e leva a inventar um `type` que o engine aceita no save mas a **UI nao abre**. Os types corretos:
 
@@ -131,6 +156,7 @@ Esses steps "fixos" existem no catalogo (`list_actions`) — mas atencao ao **gr
 | Tratar erro | `.utility.error.ErrorHandler` | `error` | `error-route` |
 | Loop (v3) | `.utility.loop.LoopCanvas` | `loop` | `loop` |
 | Inicio/Fim do loop | `.StartLoop` / `.StopLoop` | `loop` | `start` / `stop` |
+| Parar Loop | `.utility.loop.BreakLoop` | `loop` | `break-loop` |
 | Fim do fluxo | `.StopV2Step` | `stop` | `stop` |
 
 NUNCA use `.conditional.SwitchV2`, `.errorhandler.ErrorHandler`, `.utility.loop.LoopUtility(V2)` — sao inventados/descontinuados e quebram o designer.
@@ -308,7 +334,7 @@ Ao reconstruir ou **portar** um fluxo para OUTRA conta, lembre que custom action
 4. `save_flow_development(id, steps, lastGeneratedStepId, lastGeneratedLoopId, logEnabled, confirm: true)`.
 
 ## 4. Validacao (automatica no save)
-O `save_flow_development` valida ANTES de enviar e bloqueia em caso de erro (ids duplicados, `id`/`type` vazios, `lastGeneratedStepId` menor que o maior id de step). Corrija os erros listados e tente de novo. Campos obrigatorios com default seguro sao preenchidos automaticamente — confira os avisos.
+O `save_flow_development` valida ANTES de enviar e bloqueia em caso de erro (ids duplicados, `id`/`type` vazios, `lastGeneratedStepId` menor que o maior id de step — lembre que o valor correto e max + 1, ver secao 2b). Corrija os erros listados e tente de novo. Campos obrigatorios com default seguro sao preenchidos automaticamente — confira os avisos.
 
 ## 4b. Versionar e publicar (cadeia)
 A publicacao depende de uma versao, e a versao depende do save. Ordem:

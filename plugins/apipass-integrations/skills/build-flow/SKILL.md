@@ -124,6 +124,16 @@ O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). I
 }
 ```
 
+**"Parar Loop" (`.utility.loop.BreakLoop`) — use o shape que a UI gera, NAO o `stepSkeleton` do catalogo.** O skeleton de `list_actions` (grupo `loop`) traz so `type`/`mappingAttributes`, sem `image`; um BreakLoop montado a partir dele (sem `image`, com `nextSteps: []` e campos genericos de step) e aceito no save, mas nao e o conector que o canvas cria, e teve de ser recriado na UI. Shape real, confirmado num fluxo criado pelo canvas:
+```json
+{ "id": "l1a9", "label": "Parar Loop", "type": ".utility.loop.BreakLoop", "image": "break-loop",
+  "authProvider": "", "valid": true, "nodeSize": "small", "positionX": 8592, "positionY": 8572 }
+```
+- Fica dentro de `loopSteps` e e terminal: **sem `nextSteps`** e sem `failOnError`/`mappingAttributes`/demais campos obrigatorios dos steps comuns. Ao executar, sai do loop inteiro e o fluxo segue para o `nextSteps` do proprio `LoopCanvas`.
+- O step anterior aponta para ele normalmente: `{ "id": "l1a9", "type": ".utility.loop.BreakLoop", "sourceUUID": "...sourceEndpoint-l1a0", "targetUUID": "...targetEndpoint-l1a9" }` (sem `state`).
+- Seu id conta para o `lastGeneratedStepId` do loop como qualquer outro step do corpo.
+- Uso tipico: retry com `loopType: "TIMES"`, em que a tentativa bem-sucedida (ou um erro nao retentavel) sai do loop antes de esgotar as iteracoes.
+
 ### Tipos fixos canonicos (NUNCA invente o `type`)
 Esses steps "fixos" existem no catalogo (`list_actions`) — mas atencao ao **grupo**, que NAO bate com o rotulo visual. Filtrar pelo nome errado faz o catalogo parecer vazio e leva a inventar um `type` que o engine aceita no save mas a **UI nao abre**. Os types corretos:
 
@@ -133,6 +143,7 @@ Esses steps "fixos" existem no catalogo (`list_actions`) — mas atencao ao **gr
 | Tratar erro | `.utility.error.ErrorHandler` | `error` | `error-route` |
 | Loop (v3) | `.utility.loop.LoopCanvas` | `loop` | `loop` |
 | Inicio/Fim do loop | `.StartLoop` / `.StopLoop` | `loop` | `start` / `stop` |
+| Parar Loop | `.utility.loop.BreakLoop` | `loop` | `break-loop` |
 | Fim do fluxo | `.StopV2Step` | `stop` | `stop` |
 
 NUNCA use `.conditional.SwitchV2`, `.errorhandler.ErrorHandler`, `.utility.loop.LoopUtility(V2)` — sao inventados/descontinuados e quebram o designer.

@@ -129,7 +129,7 @@ O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). I
 { "id": "l1a9", "label": "Parar Loop", "type": ".utility.loop.BreakLoop", "image": "break-loop",
   "authProvider": "", "valid": true, "nodeSize": "small", "positionX": 8592, "positionY": 8572 }
 ```
-- Fica dentro de `loopSteps` e e terminal: **sem `nextSteps`** e sem `failOnError`/`mappingAttributes`/demais campos obrigatorios dos steps comuns. Ao executar, encerra o loop e o fluxo segue para o `nextSteps` do proprio `LoopCanvas` — validado em execucao real (retry com `TIMES` 3, saida pelo BreakLoop do ramo de erro na ultima tentativa). Ainda nao observado: a saida antecipada em uma iteracao intermediaria (ex. sucesso na 1a tentativa), que e o comportamento esperado.
+- Fica dentro de `loopSteps` e e terminal: **sem `nextSteps`** e sem `failOnError`/`mappingAttributes`/demais campos obrigatorios dos steps comuns. Ao executar, encerra o loop inteiro (as iteracoes restantes nao rodam) e o fluxo segue para o `nextSteps` do proprio `LoopCanvas` — validado em execucao real num retry com `TIMES` 3: com sucesso na 1a tentativa o loop terminou ja na 1a iteracao, e no ramo de erro saiu pelo BreakLoop da ultima tentativa.
 - O step anterior aponta para ele normalmente: `{ "id": "l1a9", "type": ".utility.loop.BreakLoop", "sourceUUID": "...sourceEndpoint-l1a0", "targetUUID": "...targetEndpoint-l1a9" }` (sem `state`).
 - Seu id conta para o `lastGeneratedStepId` do loop como qualquer outro step do corpo.
 - Uso tipico: retry com `loopType: "TIMES"`, em que a tentativa bem-sucedida (ou um erro nao retentavel) sai do loop antes de esgotar as iteracoes.

@@ -1,5 +1,9 @@
 # Changelog — apipass-integrations
 
+## 0.18.4
+### Corrigido
+- **`build-flow`: trigger REST e steps NodeJS devem ser criados com `failOnError: true`.** O template generico de "Campos obrigatorios em todos os steps" traz `"failOnError": false`, e fluxos de exemplo montados a partir dele propagavam o `false` para a `RestTrigger` e para os `NodeJSUtility`. O step NodeJS nao permite alterar `failOnError` manualmente na interface depois de criado, entao um NodeJS que nasce `false` so e corrigido regravando o fluxo via `save_flow_development`. Documentado na secao "Trigger REST (webhook)" (exemplo agora com `"failOnError": true`), na secao "Step NodeJS" e como excecao explicita logo apos o template generico, com a ressalva de manter o tratamento de erro (resposta generica `{{$.flowExecution.status}}` diferente de `OK` no `.StopV2Step` ou conector "Tratar erro", conforme `review-flow` C12/S4). Observado construindo o fluxo `Insere Medicao` (integracao SESuite com RM TOTVS), que foi montado com `false` e precisou ser regravado.
+
 ## 0.18.3
 ### Adicionado
 - **Diagramas C4 (Contexto/Container) na skill `document-flows`, secao 7.4.** Ate aqui a skill so cobria diagramas de sequencia (7.1-7.3); documentado o pipeline pra gerar diagrama de arquitetura no mesmo `.docx` (SVG proprio -> PNG via `@resvg/resvg-js` -> `ImageRun`, sem Mermaid/Draw.io), com convencao fixa de cores (acionador azul, origem verde escuro, APIPASS caixa branca com borda oliva, destino verde claro) e a tecnica de "bracket" horizontal pra nao poluir o diagrama quando ha N subfluxos quase identicos apontando pros mesmos sistemas externos. Nova pergunta de input na secao 1 ("incluir diagrama C4?"). Construido gerando a doc do projeto "Vale" (exportacao SoftExpert BI -> SFTP).

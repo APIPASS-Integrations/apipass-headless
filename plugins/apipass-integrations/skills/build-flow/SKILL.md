@@ -72,10 +72,13 @@ A imagem do trigger REST é **`"api"`** (NÃO `"rest"` — `"rest"` renderiza im
   "idempotencyStrategy": "NONE",
   "headers": [],
   "params": [],
+  "failOnError": true,
   "previousSteps": [],
   "nextSteps": [{ "id": "a0", "type": "...", "sourceUUID": "integration-step-uuid-sourceEndpoint-trigger", "targetUUID": "integration-step-uuid-targetEndpoint-a0" }]
 }
 ```
+
+**`failOnError: true` na trigger REST (e em todo step NodeJS).** Crie a `RestTrigger` sempre com `"failOnError": true` — nao copie o `false` do template generico de "Campos obrigatorios em todos os steps". Com `true`, uma falha na trigger marca a execucao como erro e segue o tratamento de falha do fluxo, em vez de continuar com um resultado incompleto. Garanta que o `.StopV2Step` tenha uma resposta de erro generica (`{{$.flowExecution.status}}` / `(Text) Does Not Match` / `OK`) ou um conector "Tratar erro" (ver `/apipass-integrations:review-flow`, regras C12 e S4). Mesma regra vale para o step NodeJS (secao "Step NodeJS").
 
 **Validacao de payload e documentacao OpenAPI (JSON Schema):** use o campo `jsonSchema` com o schema serializado como **string** (com `\r\n`). NÃO use `requestBodySchema` — esse campo nao aparece na UI. O `jsonSchema` serve para **duas finalidades**: validar a requisicao E alimentar o Swagger publico gerado pela APIPASS. Exemplo:
 ```json
@@ -240,6 +243,7 @@ Para consumir/publicar mensagens via fila (AMS) ou persistir dados no MongoDB na
 - `type: ".utility.nodejs.NodeJSUtility"`, `image: "nodejs"`
 - **O codigo-fonte vai no campo `code`, NUNCA em `rawData`** (esse e o campo do body do `.service.http.HttpRequest`, secao abaixo). Usar `rawData` por engano NAO da erro no `save_flow_development` — o step e aceito normalmente — mas a execucao real trava e expira em ~2 minutos (`"Execution timeout"`), como se `$export` nunca tivesse sido chamado. Sintoma silencioso e caro de debugar; se um NodeJS trava sem log de erro, confira esse campo primeiro.
 - Exportar resultado: `$export(null, { campo: valor })`
+- **Crie SEMPRE com `"failOnError": true`.** O step NodeJS nao permite alterar essa propriedade manualmente na interface depois de criado — se nascer `false`, so da para corrigir regravando o fluxo via `save_flow_development`. Por isso nao copie o `false` do template generico de "Campos obrigatorios em todos os steps" (nem de um fluxo de exemplo que o tenha em `false`) para um NodeJS. Com `true`, uma excecao no codigo marca a execucao como erro e aciona o tratamento de falha do fluxo; garanta que o `.StopV2Step` tenha a resposta generica de erro (`{{$.flowExecution.status}}` / `(Text) Does Not Match` / `OK`) ou um conector "Tratar erro" (ver `/apipass-integrations:review-flow`, C12 e S4).
 - `usedSteps` e **derivado automaticamente pelo engine** a partir das referencias (`$.a0`, `$.trigger`, etc.) encontradas dentro do `code`, no momento do `save_flow_development`/`create_version` — nao precisa (e nao da para) preencher manualmente; qualquer valor enviado e substituido pelo que o engine detectar no proprio codigo.
 
 ### Step HTTP
@@ -283,6 +287,7 @@ Para consumir/publicar mensagens via fila (AMS) ou persistir dados no MongoDB na
   "trigger": 0
 }
 ```
+> **Excecao importante:** `failOnError` vem `false` neste template generico, mas a **trigger REST** e todo step **NodeJS** devem ser criados com `"failOnError": true` (ver "Trigger REST (webhook)" e "Step NodeJS"). Os demais tipos seguem o que cada secao indica (ex.: `ERROR_ROUTE` com `true`).
 
 ## 2c. Autorizacoes (credenciais) — referencie, nunca embuta
 **Principio central da plataforma: um step NUNCA carrega credenciais/segredos embutidos. Ele referencia uma autorizacao ja cadastrada pelos campos `authId` + `authProvider`.**

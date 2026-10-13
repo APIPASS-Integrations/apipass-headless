@@ -18,6 +18,9 @@ Para alterar um fluxo existente: `get_flow_development(flowId)` -> ajuste os ste
 - **O step de fim e SENTINELA**: `a999` (`.StopV2Step`/`.StopStep`) usa um id fixo convencional e **NAO conta** para o calculo. Ignore-o ao achar o maior id gerado.
 - Ao adicionar um step novo, use o valor atual de `lastGeneratedStepId` como `id` numerico do novo step e incremente o contador.
 - `lastGeneratedLoopId`: idem para loops. >= 0.
+- **Contador interno de cada loop:** o step `LoopCanvas` (`l1`, `l2`...) tem o proprio campo `lastGeneratedStepId`, independente do contador do fluxo. Regra igual: **maior indice interno + 1** (steps `l1a0`..`l1a3` → `lastGeneratedStepId: 4` dentro do `l1`). `lastGeneratedStepId` do fluxo nao cobre os steps do loop.
+- **Por que isso importa (sintoma real, conta `topmed`, 13/10/2026):** a UI usa o contador como o id do PROXIMO step. Fluxo com `a12` e `lastGeneratedStepId: 12` → o no arrastado no canvas nasce `a12` (duplicado): vem com triangulo de alerta, nao conecta e "excluir" apaga os dois. Mesma coisa no loop (contador 3 com `l1a3` existente → no novo nasce `l1a3`). O `save_flow_development` **nao detecta** contador igual ao maior id (so bloqueia menor) — confira a mao.
+- **Nenhum step orfao / saida unica:** step comum so tem UMA saida. Se um step foi montado com `nextSteps` apontando pro Fim (`a999`) e o proximo step da cadeia ficou sem nenhuma seta de entrada (ex.: `a12 → a999` em vez de `a12 → a5`), o fluxo salva normalmente, mas o canvas nao deixa ligar o step ao seguinte (saida ocupada) e tudo depois dele nunca executa no caminho de sucesso. Ao reordenar/inserir steps, **substitua** o destino do `nextSteps`; no fim, verifique que todo step (exceto `trigger`) e destino de algum `nextSteps`.
 
 ## Ler a estrutura
 - `get_flow_development(flowId)` — os steps (use para aprender shapes e para editar).

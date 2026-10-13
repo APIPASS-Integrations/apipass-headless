@@ -34,7 +34,16 @@ Siga os padroes abaixo ao montar o array de steps. Nunca invente IDs, tipos ou i
 - Trigger sempre: `id: "trigger"`
 - Steps sequenciais: `id: "a0"`, `"a1"`, `"a2"`, etc.
 - Step de fim sempre: `id: "a999"`
-- `lastGeneratedStepId` = maior numero sufixo dos steps regulares (ex: a0,a1,a2 → `lastGeneratedStepId: 2`)
+- `lastGeneratedStepId` = **maior numero sufixo dos steps regulares + 1** (ex: a0,a1,a2 → `lastGeneratedStepId: 3`; o `a999` nao conta). **Nao e "o ultimo id usado":** a UI do canvas usa esse contador como o id do PROXIMO step que o usuario arrastar. Com `lastGeneratedStepId: 2` e um `a2` ja existente, o no novo nasce tambem `a2` (id duplicado: triangulo de alerta, nao conecta, e apagar um apaga os dois).
+- **Cada `LoopCanvas` tem o SEU contador** — o campo `lastGeneratedStepId` dentro do proprio step `l1` (ver secao Loop). Mesma regra: maior indice interno + 1 (steps `l1a0`..`l1a3` → `lastGeneratedStepId: 4` no `l1`). O `lastGeneratedStepId` do fluxo (nivel do `save_flow_development`) NAO cobre os steps de dentro do loop.
+- **O `save_flow_development` NAO acusa contador igual ao maior id** (so bloqueia contador *menor*), entao esse erro passa silencioso e so aparece quando alguem edita o fluxo no canvas. Confira a mao antes de salvar (checklist abaixo).
+
+### Checklist antes do `save_flow_development`
+1. Contador do fluxo = maior `aN` + 1 (ignora `a999`).
+2. Para cada `LoopCanvas`: o campo `lastGeneratedStepId` do loop = maior `l<k>aN` interno + 1.
+3. **Nenhum step orfao:** todo step (exceto `trigger`) aparece como destino de pelo menos um `nextSteps` de outro step. Ao ligar um step que antes ia direto pro Fim (`a999`) a outro step, **troque** o destino do `nextSteps` — nao adicione. Step comum so tem UMA saida; sem trocar, o canvas nao deixa ligar o step ao proximo (a saida ja esta ocupada pelo Fim) e a cadeia seguinte fica sem entrada.
+4. Todo destino de `nextSteps`/`cases[].targetStepId`/`defaultStepId` existe no array e tem o `type` correto.
+5. Ids unicos (incluindo os de dentro de `loopSteps`).
 
 ### Trigger scheduler
 ```json
@@ -111,6 +120,7 @@ O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). I
   "loopType": "EACH_ITEM",
   "source": "{{$.a3.body}}",
   "valid": "{{$.a3.body}}",
+  "lastGeneratedStepId": 1,
   "nextSteps": [{ "id": "a4", "type": "...", "sourceUUID": "integration-step-uuid-sourceEndpoint-l1", "targetUUID": "integration-step-uuid-targetEndpoint-a4" }],
   "loopSteps": [
     { "id": "l1StartLoop", "type": ".StartLoop", "image": "start", "label": "Início", "previousSteps": [], "positionX": 8043, "positionY": 8718,
@@ -308,7 +318,7 @@ Ao reconstruir ou **portar** um fluxo para OUTRA conta, lembre que custom action
 4. `save_flow_development(id, steps, lastGeneratedStepId, lastGeneratedLoopId, logEnabled, confirm: true)`.
 
 ## 4. Validacao (automatica no save)
-O `save_flow_development` valida ANTES de enviar e bloqueia em caso de erro (ids duplicados, `id`/`type` vazios, `lastGeneratedStepId` menor que o maior id de step). Corrija os erros listados e tente de novo. Campos obrigatorios com default seguro sao preenchidos automaticamente — confira os avisos.
+O `save_flow_development` valida ANTES de enviar e bloqueia em caso de erro (ids duplicados, `id`/`type` vazios, `lastGeneratedStepId` menor que o maior id de step). **Atencao: contador IGUAL ao maior id, contador de loop errado e step orfao NAO sao detectados** — rode o checklist da secao 2b antes de salvar. Corrija os erros listados e tente de novo. Campos obrigatorios com default seguro sao preenchidos automaticamente — confira os avisos.
 
 ## 4b. Versionar e publicar (cadeia)
 A publicacao depende de uma versao, e a versao depende do save. Ordem:
@@ -327,7 +337,7 @@ Apos publicar/rodar, analise logs (ver `/apipass-integrations:apipass-gotchas`):
 - Nunca invente IDs, tipos ou imagens de steps — siga os padroes da secao 2b.
 - Nao existe um `.body` universal — o shape de saida varia por tipo de step (ver secao "Acesso a saida de steps"). Confirme sempre via `get_action_struct`/`get_flow_development` antes de assumir `.body`.
 - Operacoes com efeito colateral (`create_*`, `save_flow_development`, `publish_flow`, `delete_*`) exigem `confirm: true` E confirmacao do usuario.
-- Contadores `lastGeneratedStepId`/`lastGeneratedLoopId` devem refletir os ids usados (ver patterns).
+- Contadores: `lastGeneratedStepId` do fluxo e de CADA loop = maior indice usado **+ 1** (e o id do proximo no do canvas); `lastGeneratedLoopId` reflete os loops. Nenhum step orfao (ver checklist da secao 2b e patterns).
 
 ## Skills relacionadas
 - `/apipass-integrations:build-agent-flow` — construir fluxos de Agente de IA / RAG (topologia hub-and-spoke)

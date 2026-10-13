@@ -71,6 +71,8 @@ Aplicar **todas** as regras abaixo ao array de steps retornado por `get_flow_dev
 | C1 | IDs duplicados ou vazios | Verificar unicidade de todos os `id` no array de steps |
 | C2 | Counter `lastGeneratedStepId` incorreto | Deve ser `max(sufixo numérico dos steps regulares) + 1`; step `a999` NÃO conta |
 | C3 | Counter `lastGeneratedLoopId` incorreto | Deve ser `(número de loops criados) + 1` |
+| C3b | Counter interno do `LoopCanvas` incorreto | O campo `lastGeneratedStepId` **dentro de cada step `l<k>`** deve ser `max(índice interno `l<k>aN`) + 1`. Valor igual ao maior índice faz o próximo nó arrastado no canvas nascer com id duplicado (não conecta; excluir apaga os dois) |
+| C3c | Step órfão / saída trocada pelo Fim | Todo step, exceto `trigger`, deve ser destino de ao menos um `nextSteps` (ou `cases[].targetStepId`/`defaultStepId`) de outro step. Padrão do bug: `aN → a999` onde deveria ser `aN → aM`, deixando `aM` e toda a cadeia seguinte sem entrada |
 | C4 | Step de Stop (`a999`) ausente | Verificar se existe step com `id: "a999"` e `type: ".StopV2Step"` |
 | C5 | Stop sem campo `responses` | `.StopV2Step` sem `responses` → `publish_flow` falha com HTTP 400. **Ordem das responses:** a response com `default: true` é sempre a primeira no array, mas o engine a executa apenas quando nenhuma das outras condições é satisfeita — o comportamento de fallback é definido pelo flag `default: true`, não pela posição no array. As responses condicionais devem vir após a Default no array, e o engine as avalia independentemente da ordem. |
 | C6 | Tipo descontinuado `.StopStep` | Deve ser `.StopV2Step` |

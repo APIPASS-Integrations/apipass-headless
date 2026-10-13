@@ -1,5 +1,10 @@
 # Changelog — apipass-integrations
 
+## 0.18.4
+### Corrigido
+- **Contador `lastGeneratedStepId` gerava ID duplicado no canvas (fluxo e dentro de `LoopCanvas`).** A UI usa o contador como o id do PROXIMO step arrastado: com `a12` existente e `lastGeneratedStepId: 12`, o no novo nasce `a12` (triangulo de alerta, nao conecta, excluir apaga os dois). A skill `build-flow` ainda ensinava "maior sufixo" (a0,a1,a2 → 2) e contradizia `apipass-patterns`/`apipass-gotchas`/`review-flow` ("ultimo id + 1"); alinhado tudo para **maior indice + 1**. Documentado tambem que **cada `LoopCanvas` tem o proprio `lastGeneratedStepId`** (campo dentro do step `l1`: `l1a0..l1a3` → 4), que o `save_flow_development` so bloqueia contador *menor* (o igual passa silencioso) e adicionado exemplo do campo no JSON do loop. Observado em fluxos gerados para o projeto "Integracao Prontuario" (conta topmed).
+- **Step orfao: ligar o step anterior ao Fim (`a12 → a999`) em vez do proximo (`a12 → a5`).** Step comum so tem uma saida; com a saida ocupada pelo Fim o canvas nao deixa ligar ao proximo, e a cadeia seguinte nunca executa no caminho de sucesso. Novo checklist pre-save na secao 2b de `build-flow` (contadores, orfaos, destinos validos, ids unicos), novas linhas em `apipass-gotchas` e novas regras de revisao `C3b` (contador interno do loop) e `C3c` (step orfao) em `review-flow`.
+
 ## 0.18.3
 ### Adicionado
 - **Diagramas C4 (Contexto/Container) na skill `document-flows`, secao 7.4.** Ate aqui a skill so cobria diagramas de sequencia (7.1-7.3); documentado o pipeline pra gerar diagrama de arquitetura no mesmo `.docx` (SVG proprio -> PNG via `@resvg/resvg-js` -> `ImageRun`, sem Mermaid/Draw.io), com convencao fixa de cores (acionador azul, origem verde escuro, APIPASS caixa branca com borda oliva, destino verde claro) e a tecnica de "bracket" horizontal pra nao poluir o diagrama quando ha N subfluxos quase identicos apontando pros mesmos sistemas externos. Nova pergunta de input na secao 1 ("incluir diagrama C4?"). Construido gerando a doc do projeto "Vale" (exportacao SoftExpert BI -> SFTP).

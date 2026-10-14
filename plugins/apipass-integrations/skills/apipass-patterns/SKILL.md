@@ -123,7 +123,7 @@ Sempre preencha o campo `oas` ao criar ou editar fluxos com RestTrigger.
 ## Teste de fluxo
 - `list_test_flows(flowId)` — cenarios de teste existentes.
 - `create_test_flow(name, flowId, environmentId, payload, confirm: true)` — cria um cenario.
-- `run_test_flow(flowId, environmentId, payload, confirm: true)` — **executa** o fluxo com o payload no environment (efeito real: cria execucao e roda os passos). Sempre confirme com o usuario, nomeando o environment e o que sera disparado. Depois, investigue o resultado pelos logs (ver `/apipass-integrations:apipass-gotchas`).
+- `run_test_flow(flowId, environmentId, payload, confirm: true)` — **executa** o fluxo com o payload no environment (efeito real: cria execucao e roda os passos). Sempre confirme com o usuario, nomeando o environment e o que sera disparado. Depois, investigue o resultado pelos logs (ver a skill `apipass-gotchas`).
 
 ## Campos derivados no save (nao setar a mao)
 O `save_flow_development` preenche/deriva automaticamente alguns campos — o builder NAO precisa enviar:
@@ -272,10 +272,10 @@ Padrao para N subfluxos dedicados, roteados pelo valor de um campo do item:
   passo.
 - O subfluxo recebe o payload via `.trigger.childflow.ChildFlowTrigger` — o valor de `rawData` do
   step chamador chega em `$.trigger.body` no subfluxo (normalize com o mesmo padrao NodeJS de
-  `/apipass-integrations:apipass-gotchas`, "Em modo TEST o payload chega em `$.trigger`...").
+  a skill `apipass-gotchas`, "Em modo TEST o payload chega em `$.trigger`...").
 
 ### Gotcha de plataforma — RunChildFlow que para de disparar um flowId especifico
-Ver `/apipass-integrations:apipass-gotchas` (tabela principal) para o sintoma e a correcao —
+Ver a skill `apipass-gotchas` (tabela principal) para o sintoma e a correcao —
 resumo: se UM flowId especifico simplesmente nao dispara via RunChildFlow (nem sync nem async,
 sem erro), mas clones identicos disparam normal e o mesmo flow funciona via `run_test_flow`
 direto, suspeite de estado corrompido preso aquele flowId (tipico apos muitos `stop_execution`/
@@ -424,7 +424,7 @@ Quando um `nextSteps` aponta para um step cujo `type` e `.service.actions.Action
 
 > `save_flow_development` e `publish_flow` aceitam o specflow sem esse campo sem reclamar — o erro so aparece em execucao. Para confirmar o shape correto, leia um fluxo funcional existente com `get_flow_development`.
 
-> **Cuidado com o VALOR do `coreRouteType`, nao so a presenca.** Um valor errado-mas-plausivel (ex. acrescentar `_UTILITY` porque o `label` i18n da acao e `ACTIONS.DATA_STORE.PROJECT_STORE_GET_UTILITY`) NAO gera erro nenhum no save/publish/execucao — o engine simplesmente **trava a execucao indefinidamente** (fica `RUNNING` para sempre, sem erro, sem timeout). Isso e muito mais dificil de diagnosticar que a falta do campo (que falha rapido com "Method and URL are required"). O `coreRouteType` correto e o **actionId puro, sem sufixo** — confirme com `get_action(groupId, id)` (campo `coreRouteType` da resposta) antes de assumir um valor. Reproduzido de forma consistente: `PROJECT_STORE_GET_UTILITY`/`ACCOUNT_STORE_SET_UTILITY` (errado, trava) vs `PROJECT_STORE_GET`/`ACCOUNT_STORE_SET` (correto — vira `.store.ProjectStoreGetRouteConfig`/`SetRouteConfig` nativo no log, resposta em milissegundos). Ver tambem `/apipass-integrations:apipass-gotchas`.
+> **Cuidado com o VALOR do `coreRouteType`, nao so a presenca.** Um valor errado-mas-plausivel (ex. acrescentar `_UTILITY` porque o `label` i18n da acao e `ACTIONS.DATA_STORE.PROJECT_STORE_GET_UTILITY`) NAO gera erro nenhum no save/publish/execucao — o engine simplesmente **trava a execucao indefinidamente** (fica `RUNNING` para sempre, sem erro, sem timeout). Isso e muito mais dificil de diagnosticar que a falta do campo (que falha rapido com "Method and URL are required"). O `coreRouteType` correto e o **actionId puro, sem sufixo** — confirme com `get_action(groupId, id)` (campo `coreRouteType` da resposta) antes de assumir um valor. Reproduzido de forma consistente: `PROJECT_STORE_GET_UTILITY`/`ACCOUNT_STORE_SET_UTILITY` (errado, trava) vs `PROJECT_STORE_GET`/`ACCOUNT_STORE_SET` (correto — vira `.store.ProjectStoreGetRouteConfig`/`SetRouteConfig` nativo no log, resposta em milissegundos). Ver tambem a skill `apipass-gotchas`.
 
 ### Escopo de persistencia do Data Store (MEMORY vs FLOW vs PROJECT vs ACCOUNT)
 

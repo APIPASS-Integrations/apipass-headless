@@ -1,0 +1,55 @@
+{
+  "name": "apipass-integrations",
+  "version": "0.19.0",
+  "description": "APIPASS Headless para Codex — construa, execute e valide integracoes da APIPASS em linguagem natural. Pesquise acoes, configure autenticacao e analise logs de execucao sem sair do seu IDE com IA.",
+  "author": {
+    "name": "APIPASS",
+    "email": "suporte@apipass.com.br"
+  },
+  "homepage": "https://apipass.com.br",
+  "repository": "https://github.com/APIPASS-Integrations/apipass-headless",
+  "license": "Apache-2.0",
+  "keywords": [
+    "apipass",
+    "integracao",
+    "api",
+    "automacao",
+    "iPaaS",
+    "mcp",
+    "conectores",
+    "keycloak"
+  ],
+  "skills": "./skills/",
+  "mcpServers": {
+    "apipass": {
+      "type": "http",
+      "url": "https://elb.apipass.com.br/mcp",
+      "tools": {
+        "publish_flow": {
+          "approval_mode": "prompt"
+        },
+        "unpublish_flow": {
+          "approval_mode": "prompt"
+        },
+        "run_test_flow": {
+          "approval_mode": "prompt"
+        }
+      }
+    }
+  },
+  "hooks": {
+    "hooks": {}
+  },
+  "interface": {
+    "displayName": "APIPASS Integrations",
+    "shortDescription": "Construa, publique e investigue integracoes da APIPASS em linguagem natural.",
+    "developerName": "APIPASS",
+    "category": "Developer Tools",
+    "websiteURL": "https://apipass.com.br",
+    "defaultPrompt": [
+      "Liste meus projetos na APIPASS",
+      "Construa um fluxo que sincronize pedidos do ERP com o CRM",
+      "Por que a ultima execucao do fluxo falhou?"
+    ]
+  }
+}

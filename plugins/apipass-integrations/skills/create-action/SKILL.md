@@ -33,7 +33,7 @@ As ferramentas operam como o usuario autenticado (Keycloak). Se algo retornar `s
 - Se nao houver provider adequado, PERGUNTE ao usuario (ou peca para cadastrar). Nao invente.
 
 ## 3. Gerar o arquivo NodeJS
-Delegue ao subagent `apipass-action-author` (ele absorve o schema verboso e devolve o `jsFileAsString` ja validado). Para casos triviais, monte voce mesmo seguindo a anatomia abaixo. Use `curl_to_http` quando a doc trouxer um cURL.
+Se a sua ferramenta suportar subagentes, delegue ao subagente `apipass-action-author` (ele absorve o schema verboso e devolve o `jsFileAsString` ja validado). Para casos triviais, monte voce mesmo seguindo a anatomia abaixo. Use `curl_to_http` quando a doc trouxer um cURL.
 
 ### Anatomia do jsFile
 ```js
@@ -93,7 +93,7 @@ Regras dos schemas (validadas pelo Joi):
 Sempre confirme com o usuario antes de enviar `confirm: true`.
 
 ## 6. Usar no fluxo
-Depois de criada, a action aparece em `list_custom_actions` e pode entrar num fluxo como step de catalogo (`.service.actions.Action` / custom) — ver `/apipass-integrations:build-flow`.
+Depois de criada, a action aparece em `list_custom_actions` e pode entrar num fluxo como step de catalogo (`.service.actions.Action` / custom) — ver a skill `build-flow`.
 
 ## Principios
 - Gere SO `executeHttpRequest` ou `execute` — nunca `configureCoreRoute`, nunca as duas.
@@ -103,6 +103,6 @@ Depois de criada, a action aparece em `list_custom_actions` e pode entrar num fl
 - Efeito colateral (`create_*`, `update_*`, `delete_*`) exige `confirm: true` E confirmacao do usuario.
 
 ## Skills relacionadas
-- `/apipass-integrations:build-flow` — usar a action num fluxo
-- `/apipass-integrations:apipass-gotchas` — armadilhas (inclui custom action)
-- `/apipass-integrations:set-account` — definir a conta/realm
+- skill `build-flow` — usar a action num fluxo
+- skill `apipass-gotchas` — armadilhas (inclui custom action)
+- skill `set-account` — definir a conta/realm

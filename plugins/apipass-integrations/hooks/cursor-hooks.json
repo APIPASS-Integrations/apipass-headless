@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeMCPExecution": [
+      {
+        "command": "node \"${CURSOR_PLUGIN_ROOT}/hooks/confirm-publish.js\" --cursor",
+        "failClosed": true
+      }
+    ]
+  }
+}

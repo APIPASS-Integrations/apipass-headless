@@ -3,7 +3,7 @@ name: build-agent-flow
 description: |
   Construir ou modificar fluxos de AGENTE DE IA na APIPASS (Agent Builder). Use quando o pedido envolve um agente de IA, RAG ou base de conhecimento — "crie um agente de IA que...", "agente que analisa/responde...", "chatbot com base de conhecimento", "fluxo de RAG", "ingestao para vector store", "agente que consulta o banco e responde".
 
-  Ponto de entrada para fluxos com `.service.ai.AiAgent`, modelos LLM, memoria, tools, embeddings, vector store, document loaders e splitters. Carregue ANTES de montar os steps de IA. A mecanica compartilhada (trigger, stop, auth, versao, publish) e delegada a `/apipass-integrations:build-flow`.
+  Ponto de entrada para fluxos com `.service.ai.AiAgent`, modelos LLM, memoria, tools, embeddings, vector store, document loaders e splitters. Carregue ANTES de montar os steps de IA. A mecanica compartilhada (trigger, stop, auth, versao, publish) e delegada à skill `build-flow`.
 disable-model-invocation: false
 ---
 
@@ -11,13 +11,13 @@ disable-model-invocation: false
 
 Fluxos de agente tem uma topologia **diferente** da cadeia linear de um fluxo comum. Este guia cobre SO o que e
 especifico de agente. Para o resto (autenticacao, trigger, stop/`responses`/OAS, contadores, posicoes,
-save → version → publish, autorizacoes por referencia), siga `/apipass-integrations:build-flow` e
-`/apipass-integrations:apipass-patterns`. A anatomia de cada acao de IA esta em `/apipass-integrations:apipass-agent-actions`.
+save → version → publish, autorizacoes por referencia), siga a skill `build-flow` e
+a skill `apipass-patterns`. A anatomia de cada acao de IA esta na skill `apipass-agent-actions`.
 
 ## 0. Quando usar esta skill
 - **Agente de IA** (decide, usa tools/memoria, base de conhecimento) → esta skill (`.service.ai.AiAgent`).
 - **Completion simples** ("chame o ChatGPT para gerar/classificar X", sem tools) → passo linear `CHATGPT_CREATE_COMPLETION` na `build-flow` comum. NAO precisa de agente.
-- **Fluxo de integracao comum** (sem IA) → `/apipass-integrations:build-flow`.
+- **Fluxo de integracao comum** (sem IA) → a skill `build-flow`.
 
 ## 1. O conceito central: hub-and-spoke
 O agente e um **hub**. Modelo, memoria e tools sao **satelites** que NAO entram na cadeia `nextSteps` —
@@ -92,7 +92,7 @@ Depois siga o ciclo padrao de `build-flow`:
 - Credenciais sempre por referencia; nunca embuta chave de provider de IA no step.
 
 ## Skills relacionadas
-- `/apipass-integrations:apipass-agent-actions` — anatomia das acoes de IA e do agente (referencia)
-- `/apipass-integrations:build-flow` — mecanica compartilhada (trigger, stop, auth, save/version/publish)
-- `/apipass-integrations:apipass-patterns` — estrutura do fluxo, contadores, publicacao, OAS
-- `/apipass-integrations:apipass-gotchas` — erros comuns e debug de execucao
+- skill `apipass-agent-actions` — anatomia das acoes de IA e do agente (referencia)
+- skill `build-flow` — mecanica compartilhada (trigger, stop, auth, save/version/publish)
+- skill `apipass-patterns` — estrutura do fluxo, contadores, publicacao, OAS
+- skill `apipass-gotchas` — erros comuns e debug de execucao

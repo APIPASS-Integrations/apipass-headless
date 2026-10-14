@@ -43,4 +43,4 @@ Use para: "quanto consumi este mes", "uso total da conta", "uso do flow engine",
 - Apresente numeros de consumo de forma objetiva; se o usuario quiser grafico, os dados da serie temporal ja vem prontos para plotar.
 
 ## Relacao com logs
-Consumo (quantos/quanto) e diferente de **depurar uma execucao** (por que falhou) — para investigar falhas use `/apipass-integrations:apipass-gotchas` (list_flow_execution_logs, etc.). Use consumo para volume/uso; logs para diagnostico.
+Consumo (quantos/quanto) e diferente de **depurar uma execucao** (por que falhou) — para investigar falhas use a skill `apipass-gotchas` (list_flow_execution_logs, etc.). Use consumo para volume/uso; logs para diagnostico.

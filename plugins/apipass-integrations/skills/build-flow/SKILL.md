@@ -11,7 +11,7 @@ disable-model-invocation: false
 
 Siga este processo. Nao pule o planejamento. A fonte da verdade vive no workspace da APIPASS via ferramentas MCP — nunca edite JSON local.
 
-> **Fluxo de Agente de IA?** Se o pedido envolve um agente de IA, RAG ou base de conhecimento (`.service.ai.AiAgent`, modelos LLM, memoria, tools, vector store, embeddings), a topologia e **hub-and-spoke** — diferente da cadeia linear deste guia. Carregue `/apipass-integrations:build-agent-flow` (ele reaproveita a mecanica compartilhada daqui). Uma chamada simples ao ChatGPT sem tools (`CHATGPT_CREATE_COMPLETION`) e um passo linear normal e fica neste guia.
+> **Fluxo de Agente de IA?** Se o pedido envolve um agente de IA, RAG ou base de conhecimento (`.service.ai.AiAgent`, modelos LLM, memoria, tools, vector store, embeddings), a topologia e **hub-and-spoke** — diferente da cadeia linear deste guia. Carregue a skill `build-agent-flow` (ele reaproveita a mecanica compartilhada daqui). Uma chamada simples ao ChatGPT sem tools (`CHATGPT_CREATE_COMPLETION`) e um passo linear normal e fica neste guia.
 
 ## 0. Autenticacao
 As ferramentas operam como o usuario autenticado (Keycloak). Se alguma retornar `status: "login_necessario"` com uma `authorizeUrl`, mostre a URL ao usuario, peca para autorizar no navegador e refaca a acao. O token renova sozinho.
@@ -22,9 +22,9 @@ As ferramentas operam como o usuario autenticado (Keycloak). Se alguma retornar 
 - Faca 2-3 perguntas de design numa unica mensagem. Confirme o plano antes de construir.
 
 ## 2. Pesquisar as acoes (catalogo)
-Cada passo do fluxo e uma **acao** do catalogo. Para saber o `type` exato e o shape do `mappingAttributes`, delegue ao subagent `apipass-researcher` ou use `/apipass-integrations:research-action`. Nunca invente nomes/valores de campo — descubra via `get_action_struct` ou lendo um fluxo existente com `get_flow_development`.
+Cada passo do fluxo e uma **acao** do catalogo. Para saber o `type` exato e o shape do `mappingAttributes`, delegue ao subagente `apipass-researcher` (se a sua ferramenta suportar subagentes) ou siga a skill `research-action`. Nunca invente nomes/valores de campo — descubra via `get_action_struct` ou lendo um fluxo existente com `get_flow_development`.
 
-> Se uma das acoes for um Agente de IA (`.service.ai.AiAgent`) ou da familia de IA (modelos LLM, memoria, tools, vector store, embeddings, document loader/splitter), pare e use `/apipass-integrations:build-agent-flow` — a montagem desses passos e por `*RouteConfigId` (hub-and-spoke), nao por `nextSteps`.
+> Se uma das acoes for um Agente de IA (`.service.ai.AiAgent`) ou da familia de IA (modelos LLM, memoria, tools, vector store, embeddings, document loader/splitter), pare e use a skill `build-agent-flow` — a montagem desses passos e por `*RouteConfigId` (hub-and-spoke), nao por `nextSteps`.
 
 ## 2b. Padroes obrigatorios de estrutura de steps
 
@@ -200,7 +200,7 @@ O campo `responses` e obrigatorio para publicar (sem ele, `publish_flow` retorna
 - Entradas adicionais para cada codigo de erro com `groups` definindo a condicao de ativacao.
 - `oas.jsonSchema` e sempre uma **string** JSON serializada (nunca objeto).
 
-Ver shape completo e exemplos em `/apipass-integrations:apipass-patterns` (secao "Documentacao OpenAPI (OAS)").
+Ver shape completo e exemplos na skill `apipass-patterns` (secao "Documentacao OpenAPI (OAS)").
 
 ### Conexoes entre steps
 - `nextSteps[].sourceUUID`: `"integration-step-uuid-sourceEndpoint-{id-origem}"`
@@ -232,7 +232,7 @@ Isso vale tanto dentro de codigo NodeJS quanto em interpolacoes mustache (`{{...
 Isso vale dentro de codigo NodeJS (`$.a0.body.campo`) e dentro de interpolacoes (`"{{$.a0.body.campo}}"`).
 
 ### AMS e AOS — filas assincronas e Object Store
-Para consumir/publicar mensagens via fila (AMS) ou persistir dados no MongoDB nativo da APIPASS (AOS), ver `/apipass-integrations:apipass-patterns` (secoes "AMS — Apipass Message System" e "AOS — Apipass Object Store") — shapes completos do trigger `TriggerAMSConsumeMessage`, do step `AMS_SEND_MESSAGE`, de `AOS_FIND_ONE_BY_QUERY`/`AOS_UPDATE`/`AOS_INSERT`/`AOS_DELETE` e do NodeJS helper de `$set`.
+Para consumir/publicar mensagens via fila (AMS) ou persistir dados no MongoDB nativo da APIPASS (AOS), ver a skill `apipass-patterns` (secoes "AMS — Apipass Message System" e "AOS — Apipass Object Store") — shapes completos do trigger `TriggerAMSConsumeMessage`, do step `AMS_SEND_MESSAGE`, de `AOS_FIND_ONE_BY_QUERY`/`AOS_UPDATE`/`AOS_INSERT`/`AOS_DELETE` e do NodeJS helper de `$set`.
 
 **`deleteStrategy` do trigger AMS — valores exatos:** `"IMMEDIATELY"` ou `"ON_FLOW_SUCCESS"` (NAO `"ON_SUCCESS"` — esse valor parece plausivel mas nao existe; o engine aceita no save sem erro, mas a UI nao reconhece o valor ao abrir o step: o dropdown "Estrategia de remocao da mensagem" aparece vazio e, por consequencia, o campo dependente `defaultVisibilityTimeout` (numero, em segundos) tambem aparece vazio mesmo que ja esteja salvo. Sintoma identico ao bug do `loopType`/`source` do Loop — confira sempre o valor exato reabrindo o step na UI apos o save.
 
@@ -249,7 +249,7 @@ Para consumir/publicar mensagens via fila (AMS) ou persistir dados no MongoDB na
 
 **`bearerToken`/`contentType` de nivel raiz NAO sao aplicados de fato a requisicao (confirmado empiricamente com teste de eco via httpbin.org).** Mesmo preenchidos, o header `Authorization` nao e enviado e o `Content-Type` real da chamada e sempre `text/plain`, nunca o valor configurado. Esses campos existem no `stepSkeleton` (copie-os por compatibilidade de schema), mas nao confie neles para autenticacao ou content-type — configure via `headers` (abaixo).
 
-**`Authorization` e `Content-Type` so funcionam via o array `headers`, e cada item usa `label`/`value` — NUNCA `key`/`value`.** Um header montado com `key` em vez de `label` e aceito silenciosamente pelo `save_flow_development` e pela execucao (sem erro, sem log), mas o header nunca e enviado. Exemplo completo, incluindo o token OAuth de uma autorizacao referenciada no proprio step via `authId`/`authProvider` (sintaxe de interpolacao sem o id embutido — ver `/apipass-integrations:apipass-actions`):
+**`Authorization` e `Content-Type` so funcionam via o array `headers`, e cada item usa `label`/`value` — NUNCA `key`/`value`.** Um header montado com `key` em vez de `label` e aceito silenciosamente pelo `save_flow_development` e pela execucao (sem erro, sem log), mas o header nunca e enviado. Exemplo completo, incluindo o token OAuth de uma autorizacao referenciada no proprio step via `authId`/`authProvider` (sintaxe de interpolacao sem o id embutido — ver a skill `apipass-actions`):
 ```json
 "headers": [
   { "label": "Content-Type", "value": "application/json" },
@@ -318,7 +318,7 @@ A publicacao depende de uma versao, e a versao depende do save. Ordem:
 Para testar antes de publicar: `run_test_flow(flowId, environmentId, payload, confirm: true)`. Todas essas operacoes tem efeito real — confirme com o usuario.
 
 ## 5. Investigar execucoes
-Apos publicar/rodar, analise logs (ver `/apipass-integrations:apipass-gotchas`): `list_flow_execution_logs` -> `get_flow_execution_log` -> `list_step_execution_logs` -> `read_step_payload`.
+Apos publicar/rodar, analise logs (ver a skill `apipass-gotchas`): `list_flow_execution_logs` -> `get_flow_execution_log` -> `list_step_execution_logs` -> `read_step_payload`.
 
 ## Principios
 - Descubra tecnicamente, esclareca estrategicamente.
@@ -330,11 +330,11 @@ Apos publicar/rodar, analise logs (ver `/apipass-integrations:apipass-gotchas`):
 - Contadores `lastGeneratedStepId`/`lastGeneratedLoopId` devem refletir os ids usados (ver patterns).
 
 ## Skills relacionadas
-- `/apipass-integrations:build-agent-flow` — construir fluxos de Agente de IA / RAG (topologia hub-and-spoke)
-- `/apipass-integrations:apipass-agent-actions` — anatomia das acoes de IA e do agente
-- `/apipass-integrations:research-action` — pesquisar uma acao do catalogo
-- `/apipass-integrations:create-action` — criar uma custom action a partir de doc de API
-- `/apipass-integrations:apipass-actions` — anatomia do FlowStep e catalogo
-- `/apipass-integrations:apipass-patterns` — estrutura do fluxo, contadores, publicacao
-- `/apipass-integrations:apipass-gotchas` — erros comuns e debug de execucao
-- `/apipass-integrations:set-account` — definir a conta/realm
+- skill `build-agent-flow` — construir fluxos de Agente de IA / RAG (topologia hub-and-spoke)
+- skill `apipass-agent-actions` — anatomia das acoes de IA e do agente
+- skill `research-action` — pesquisar uma acao do catalogo
+- skill `create-action` — criar uma custom action a partir de doc de API
+- skill `apipass-actions` — anatomia do FlowStep e catalogo
+- skill `apipass-patterns` — estrutura do fluxo, contadores, publicacao
+- skill `apipass-gotchas` — erros comuns e debug de execucao
+- skill `set-account` — definir a conta/realm

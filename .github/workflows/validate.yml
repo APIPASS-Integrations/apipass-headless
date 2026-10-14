@@ -1,0 +1,27 @@
+name: Validar plugin multi-ferramenta
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validar skills e manifestos (Claude, Codex, Copilot, Cursor, Gemini)
+        run: node scripts/build.mjs --check
+      - name: Montar pacote do Gemini CLI
+        run: node scripts/build.mjs --pack
+      - name: Testar hook de confirmacao
+        run: |
+          out=$(echo '{"tool_name":"mcp__apipass__publish_flow","tool_input":{"flowId":"f"}}' | node plugins/apipass-integrations/hooks/confirm-publish.js)
+          echo "$out" | grep -q '"permissionDecision":"ask"'
+          out=$(echo '{"tool_name":"mcp__apipass__list_flows","tool_input":{}}' | node plugins/apipass-integrations/hooks/confirm-publish.js)
+          test -z "$out"
+          out=$(echo '{"tool_name":"run_test_flow","tool_input":"{}","mcp_server_name":"apipass"}' | node plugins/apipass-integrations/hooks/confirm-publish.js --cursor)
+          echo "$out" | grep -q '"permission":"ask"'

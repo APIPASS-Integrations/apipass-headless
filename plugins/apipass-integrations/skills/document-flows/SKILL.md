@@ -14,7 +14,9 @@ argument-hint: "[nome-do-projeto]"
 
 Produz um documento corporativo (`.docx`, com PDF opcional) descrevendo os fluxos de um
 projeto APIPASS. Os fluxos sao lidos **direto da APIPASS via MCP** — nao ha upload manual de
-JSON. A montagem do arquivo Word e delegada a skill `anthropic-skills:docx`.
+JSON. A montagem do arquivo Word e delegada a skill de geracao de `.docx` disponivel na sua
+ferramenta (ex. `anthropic-skills:docx` no Claude). Se nao houver uma, gere o arquivo direto
+com a biblioteca `docx` (npm) ou `python-docx`.
 
 Estrutura do entregavel (padrao do "doc SAP de referencia"):
 ```
@@ -27,7 +29,7 @@ Final. Tratamento de Erros e Resiliencia
 
 ## 1. Coletar inputs do usuario
 
-Se faltarem, pergunte numa unica mensagem (use `AskUserQuestion`):
+Se faltarem, pergunte numa unica mensagem (se a sua ferramenta tiver uma ferramenta de perguntas estruturadas — ex. `AskUserQuestion` no Claude Code — use-a):
 - **Projeto/cliente** — para resolver o `projectId` via MCP (pode vir como argumento).
 - **Nome para a capa e cabecalho** — ex. "Mondelez", "JBS Terminais". Parametriza a capa;
   **nunca** use nome hardcoded de cliente anterior.
@@ -48,8 +50,8 @@ Se faltarem, pergunte numa unica mensagem (use `AskUserQuestion`):
    `get_flow_development(flowId)` (steps). Use o que retornar a estrutura mais completa.
 
 > Estrutura do specflow (steps, trigger, contadores) esta em
-> `/apipass-integrations:apipass-patterns`. Anatomia do FlowStep e do `mappingAttributes` em
-> `/apipass-integrations:apipass-actions`. Se uma tool pedir login, mostre a `authorizeUrl`
+> a skill `apipass-patterns`. Anatomia do FlowStep e do `mappingAttributes` em
+> a skill `apipass-actions`. Se uma tool pedir login, mostre a `authorizeUrl`
 > ao usuario e refaca.
 
 ## 3. Filtrar rascunhos e legados
@@ -88,9 +90,11 @@ fluxos num doc), ou agrupado por categoria.
 
 ## 6. Gerar o documento (skill docx)
 
-Invoque a skill `anthropic-skills:docx` passando o conteudo estruturado acima para produzir
-o `.docx` (gerar com `docx-js`; validar com o `validate.py` da skill — no Windows rode o
-Python com `PYTHONUTF8=1`, senao o console quebra em cp1252).
+Invoque a skill de `.docx` da sua ferramenta (ex. `anthropic-skills:docx` no Claude) passando o
+conteudo estruturado acima para produzir o `.docx`. Sem uma skill dedicada, gere com a
+biblioteca `docx` (npm, `docx-js`) ou `python-docx`. Se a skill tiver validador (ex. o
+`validate.py` da skill do Claude), rode-o — no Windows use `PYTHONUTF8=1`, senao o console
+quebra em cp1252.
 
 **PDF (opcional):** o caminho padrao da skill docx (LibreOffice headless via `soffice.py`)
 **nao funciona no Windows** — o wrapper usa sockets `AF_UNIX`. Neste ambiente, converta com o
@@ -361,7 +365,7 @@ function caixaContainer(x, y, w, h, titulo, linhas, cor) {
 - Fonte da verdade e sempre a APIPASS via MCP; nao edite nem dependa de JSON local.
 
 ## Skills relacionadas
-- `anthropic-skills:docx` — montagem do arquivo Word/PDF.
-- `/apipass-integrations:apipass-patterns` — estrutura do specflow e contadores.
-- `/apipass-integrations:apipass-actions` — anatomia do FlowStep e `mappingAttributes`.
-- `/apipass-integrations:set-account` — definir a conta/realm antes de ler os fluxos.
+- skill de `.docx` da sua ferramenta (ex. `anthropic-skills:docx` no Claude) — montagem do arquivo Word/PDF.
+- skill `apipass-patterns` — estrutura do specflow e contadores.
+- skill `apipass-actions` — anatomia do FlowStep e `mappingAttributes`.
+- skill `set-account` — definir a conta/realm antes de ler os fluxos.

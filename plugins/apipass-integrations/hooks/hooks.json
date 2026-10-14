@@ -2,7 +2,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "mcp__.*apipass__(publish_flow|unpublish_flow|run_test_flow)$",
+        "matcher": ".*(publish_flow|unpublish_flow|run_test_flow)$",
         "hooks": [
           {
             "type": "command",

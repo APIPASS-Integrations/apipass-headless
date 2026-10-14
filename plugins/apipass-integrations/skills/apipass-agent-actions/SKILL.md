@@ -8,7 +8,7 @@ disable-model-invocation: false
 
 A familia de IA da APIPASS (Agent Builder) tem uma topologia **hub-and-spoke**: o step `.service.ai.AiAgent`
 e o hub; modelo, memoria e tools sao **satelites** que NAO entram na cadeia `nextSteps` — eles se ligam ao
-agente por campos `*RouteConfigId`. O processo de montagem fica em `/apipass-integrations:build-agent-flow`;
+agente por campos `*RouteConfigId`. O processo de montagem fica na skill `build-agent-flow`;
 este arquivo e a **referencia** de cada acao (type/actionId, papel, campo de ligacao, auth, `inputData`).
 
 > Descubra/confirme os types e schemas pelo catalogo, nunca invente: `list_actions(group)` lista a familia,

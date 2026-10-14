@@ -1,0 +1,28 @@
+{
+  "name": "apipass-integrations",
+  "displayName": "APIPASS Integrations",
+  "version": "0.19.0",
+  "description": "APIPASS Headless para Cursor — construa, execute e valide integracoes da APIPASS em linguagem natural. Pesquise acoes, configure autenticacao e analise logs de execucao sem sair do seu IDE com IA.",
+  "author": {
+    "name": "APIPASS",
+    "email": "suporte@apipass.com.br"
+  },
+  "homepage": "https://apipass.com.br",
+  "repository": "https://github.com/APIPASS-Integrations/apipass-headless",
+  "license": "Apache-2.0",
+  "keywords": [
+    "apipass",
+    "integracao",
+    "api",
+    "automacao",
+    "iPaaS",
+    "mcp",
+    "conectores",
+    "keycloak"
+  ],
+  "category": "developer-tools",
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "hooks": "./hooks/cursor-hooks.json",
+  "mcpServers": "./.mcp.json"
+}

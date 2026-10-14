@@ -1,0 +1,10 @@
+# Gate de confirmacao da APIPASS para o Gemini CLI.
+# Equivalente ao hook confirm-publish.js do Claude/Copilot/Cursor e ao
+# approval_mode "prompt" do Codex: publicar, despublicar e executar fluxo de
+# teste SEMPRE pedem confirmacao do usuario (em modo headless, viram "deny").
+
+[[rule]]
+mcpName = "apipass"
+toolName = ["publish_flow", "unpublish_flow", "run_test_flow"]
+decision = "ask_user"
+priority = 900

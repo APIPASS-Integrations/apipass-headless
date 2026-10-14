@@ -5,9 +5,11 @@ disable-model-invocation: false
 argument-hint: "[nome-da-acao]"
 ---
 
-# Pesquisar Acao: $ARGUMENTS
+# Pesquisar Acao
 
-Para builds reais, prefira delegar ao subagent `apipass-researcher` (ele absorve o schema verboso e devolve um passo pronto). Use este processo direto para buscas triviais.
+Acao alvo: a informada pelo usuario ($ARGUMENTS — se aparecer vazio ou literal, use a acao citada na conversa).
+
+Se a sua ferramenta suportar subagentes, prefira delegar builds reais ao subagente `apipass-researcher` (ele absorve o schema verboso e devolve um passo pronto). Caso contrario — ou para buscas triviais — siga este processo direto.
 
 ## Pare e pergunte se
 - O `get_action_struct` nao revelar os campos/valores.

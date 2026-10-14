@@ -25,3 +25,5 @@ jobs:
           test -z "$out"
           out=$(echo '{"tool_name":"run_test_flow","tool_input":"{}","mcp_server_name":"apipass"}' | node plugins/apipass-integrations/hooks/confirm-publish.js --cursor)
           echo "$out" | grep -q '"permission":"ask"'
+          out=$(echo '{"tool_name":"list_flows","tool_input":"{}","mcp_server_name":"other"}' | node plugins/apipass-integrations/hooks/confirm-publish.js --cursor)
+          test "$out" = '{}'

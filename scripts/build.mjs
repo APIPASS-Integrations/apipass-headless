@@ -52,7 +52,10 @@ function readJson(path) {
 function writeJsonIfChanged(path, data) {
   const next = JSON.stringify(data, null, 2) + '\n';
   const prev = existsSync(path) ? readFileSync(path, 'utf8') : null;
-  if (prev === next) return;
+  // Compara ignorando CRLF: em checkouts Windows (core.autocrlf=true) os arquivos
+  // ficam com \r\n, mas geramos \n — sem normalizar, o --check acusaria drift
+  // falso e o modo de escrita faria churn so de fim de linha.
+  if (prev !== null && prev.replace(/\r\n/g, '\n') === next) return;
   if (CHECK) {
     drift.push(rel(path));
     return;

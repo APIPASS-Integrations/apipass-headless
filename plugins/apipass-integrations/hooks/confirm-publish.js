@@ -15,8 +15,9 @@
  *
  * Algumas ferramentas (ex. VS Code) ignoram o `matcher` do hooks.json e rodam o
  * hook para TODA tool — por isso o filtro por nome tambem e feito aqui: tools que
- * nao sao operacoes protegidas passam sem decisao (formato padrao) ou com
- * "allow" (Cursor, cujo schema exige uma decisao).
+ * nao sao operacoes protegidas passam sem decisao (formato padrao) ou com um
+ * objeto vazio no Cursor (sem campo "permission"), que mantem o fluxo de
+ * aprovacao padrao do usuario e NAO sobrescreve outros servidores MCP.
  *
  * Codex e Gemini CLI nao usam este script: o gate e declarativo
  * (approval_mode "prompt" no .codex-plugin/plugin.json e policy "ask_user" no
@@ -73,7 +74,11 @@ function ask(reason) {
 
 function seguir() {
   // Tool nao protegida: nao interfere no fluxo normal de permissoes.
-  if (isCursor) return responder({ permission: 'allow' });
+  // No Cursor devolvemos um objeto vazio (sem campo "permission") em vez de
+  // "allow": assim o hook NAO auto-aprova a tool nem sobrescreve a configuracao
+  // de aprovacao do usuario para esta ou para outros servidores MCP — o Cursor
+  // segue com o seu fluxo padrao de permissoes.
+  if (isCursor) return responder({});
   process.exit(0);
 }
 

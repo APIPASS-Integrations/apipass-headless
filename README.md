@@ -8,7 +8,6 @@
 | [Codex](https://developers.openai.com/codex) (CLI, IDE, app) | marketplace de plugins | `approval_mode: "prompt"` nas tools MCP |
 | [GitHub Copilot](https://github.com/features/copilot) (CLI e VS Code) | marketplace de plugins | hook `PreToolUse` → `ask` |
 | [Cursor](https://cursor.com) | marketplace de plugins (time) ou plugin local | hook `beforeMCPExecution` → `ask` |
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | extensao | policy `ask_user` |
 
 Construa, publique, teste e investigue integracoes da APIPASS conversando com a IA — voce descreve o que quer e ela planeja, monta, valida e executa, falando com a plataforma (via servidor MCP hospedado) como voce.
 
@@ -57,12 +56,6 @@ Habilite os agent plugins (`chat.plugins.enabled`), adicione o marketplace `APIP
 - **Time/empresa:** Dashboard → *Plugins & MCPs* → *Add Marketplace* → *Import from Repo* → `https://github.com/APIPASS-Integrations/apipass-headless`. Depois, *Customize* → *Install*.
 - **Local:** copie `plugins/apipass-integrations` para `~/.cursor/plugins/local/apipass-integrations` e rode *Developer: Reload Window*.
 
-### Gemini CLI
-```bash
-gemini extensions install https://github.com/APIPASS-Integrations/apipass-headless
-```
-O instalador baixa o pacote da ultima release (montado por `scripts/build.mjs`). Atualizar: `gemini extensions update apipass-integrations`.
-
 ### Outras ferramentas (instalacao manual)
 Qualquer agente com suporte a MCP e Agent Skills funciona:
 1. Cadastre o servidor MCP HTTP `apipass` apontando para `https://elb.apipass.com.br/mcp`.
@@ -89,7 +82,7 @@ Operacoes com efeito real (criar/salvar/publicar/testar/retry/stop) sempre pedem
 
 ## Skills disponiveis
 
-No Claude Code as skills viram comandos `/apipass-integrations:<skill>`; no Codex, `$<skill>`; no Copilot e no Cursor, `/<skill>`; no Gemini CLI elas sao ativadas automaticamente pelo contexto. Em todas, basta descrever o pedido.
+No Claude Code as skills viram comandos `/apipass-integrations:<skill>`; no Codex, `$<skill>`; no Copilot e no Cursor, `/<skill>`. Em todas, basta descrever o pedido.
 
 Construcao de fluxos:
 - `/apipass-integrations:build-flow` — construir/alterar um fluxo de integracao (ponto de entrada)
@@ -139,15 +132,13 @@ plugins/apipass-integrations/            # FONTE UNICA do plugin
   hooks/hooks.json                       # gate de confirmacao (Claude, Copilot, VS Code)
   hooks/cursor-hooks.json                # gate de confirmacao (Cursor)
   hooks/confirm-publish.js               # script do gate (formatos Claude e Cursor)
-adapters/gemini/                         # manifesto, GEMINI.md e policy do Gemini CLI
-scripts/build.mjs                        # sincroniza versoes, valida e monta o pacote do Gemini
+scripts/build.mjs                        # sincroniza versoes e valida os manifestos
 ```
 
 ### Convencoes
 - **Idioma:** skills, agentes e documentacao em portugues (pt-BR), como o restante do plugin.
 - **Skills neutras de ferramenta:** cada skill vive em `skills/<nome>/SKILL.md` com frontmatter (`name` igual ao diretorio, `description` com ate 1024 caracteres). A `description` e o que faz a IA decidir quando carregar a skill — seja especifico. Para citar outra skill, escreva "skill `<nome>`" (nao `/apipass-integrations:<nome>`, que so existe no Claude). Recursos de uma ferramenta especifica (subagentes, `AskUserQuestion`, skills de outros plugins) devem ser citados como opcionais, com alternativa.
 - **Versao:** ao mudar o comportamento do plugin, incremente a `version` **so** em `plugins/apipass-integrations/.claude-plugin/plugin.json`, rode `node scripts/build.mjs` (propaga para todos os manifestos) e adicione uma entrada no [CHANGELOG.md](CHANGELOG.md). O CI (`node scripts/build.mjs --check`) falha se algo ficar dessincronizado.
-- **Release:** crie a tag `v<versao>`; o workflow `release.yml` publica a release com o pacote do Gemini CLI.
 - **Nunca** embuta credenciais, tokens ou URLs internas no codigo ou na documentacao.
 
 ### Testar localmente
@@ -155,7 +146,6 @@ scripts/build.mjs                        # sincroniza versoes, valida e monta o 
 - **Codex:** `codex plugin marketplace add /caminho/para/apipass-headless` e `codex plugin add apipass-integrations@apipass-plugins`.
 - **Copilot CLI:** `copilot --plugin-dir /caminho/para/apipass-headless/plugins/apipass-integrations`.
 - **Cursor:** copie/linke `plugins/apipass-integrations` em `~/.cursor/plugins/local/` e rode *Developer: Reload Window*.
-- **Gemini CLI:** `node scripts/build.mjs` e `gemini extensions link dist/gemini/apipass-integrations`.
 
 ## Suporte
 Problemas de login (`invalid redirect_uri`, `client not found`) sao de cadastro do client no Keycloak; 401/403 vem do gateway. Fale com o time de plataforma.

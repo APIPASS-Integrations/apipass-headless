@@ -13,10 +13,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Validar skills e manifestos (Claude, Codex, Copilot, Cursor, Gemini)
+      - name: Validar skills e manifestos (Claude, Codex, Copilot, Cursor)
         run: node scripts/build.mjs --check
-      - name: Montar pacote do Gemini CLI
-        run: node scripts/build.mjs --pack
       - name: Testar hook de confirmacao
         run: |
           out=$(echo '{"tool_name":"mcp__apipass__publish_flow","tool_input":{"flowId":"f"}}' | node plugins/apipass-integrations/hooks/confirm-publish.js)

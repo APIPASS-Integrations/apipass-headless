@@ -6,35 +6,27 @@
  * a versao em plugins/apipass-integrations/.claude-plugin/plugin.json.
  *
  * O script:
- *   1. sincroniza a versao em todos os manifestos (Claude, Codex, Cursor, Copilot, Gemini);
+ *   1. sincroniza a versao em todos os manifestos (Claude, Codex, Cursor, Copilot);
  *   2. gera .github/plugin/marketplace.json (Copilot) a partir do marketplace do Claude;
  *   3. valida skills (frontmatter, nome = diretorio, descricao <= 1024, sem referencias
- *      exclusivas do Claude) e os JSON dos manifestos;
- *   4. monta o pacote do Gemini CLI em dist/gemini/apipass-integrations/ (o Gemini exige o
- *      gemini-extension.json na raiz do pacote) e, com --pack, gera o .tar.gz de release.
+ *      exclusivas do Claude) e os JSON dos manifestos.
  *
  * Uso:
- *   node scripts/build.mjs           # sincroniza + valida + monta dist/gemini
+ *   node scripts/build.mjs           # sincroniza + valida
  *   node scripts/build.mjs --check   # so valida; falha se algo estiver dessincronizado (CI)
- *   node scripts/build.mjs --pack    # tambem gera dist/apipass-integrations.tar.gz
  *
  * Sem dependencias: Node >= 18.
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, cpSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execFileSync } from 'node:child_process';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PLUGIN = join(ROOT, 'plugins', 'apipass-integrations');
-const GEMINI_ADAPTER = join(ROOT, 'adapters', 'gemini');
-const DIST = join(ROOT, 'dist');
-const GEMINI_DIST = join(DIST, 'gemini', 'apipass-integrations');
 
 const args = new Set(process.argv.slice(2));
 const CHECK = args.has('--check');
-const PACK = args.has('--pack');
 
 const errors = [];
 const drift = [];
@@ -103,7 +95,6 @@ console.log(`APIPASS Headless — versao ${version}`);
 const manifests = [
   { path: join(PLUGIN, '.codex-plugin', 'plugin.json'), set: (d) => (d.version = version) },
   { path: join(PLUGIN, '.cursor-plugin', 'plugin.json'), set: (d) => (d.version = version) },
-  { path: join(GEMINI_ADAPTER, 'gemini-extension.json'), set: (d) => (d.version = version) },
   {
     path: join(ROOT, '.claude-plugin', 'marketplace.json'),
     set: (d) => d.plugins.forEach((p) => p.name === 'apipass-integrations' && (p.version = version)),
@@ -161,49 +152,6 @@ for (const dir of skills) {
   for (const { re, msg } of CLAUDE_ONLY) if (re.test(text)) errors.push(`${rel(path)}: ${msg}`);
 }
 console.log(`  ${skills.length} skills validadas`);
-
-// --- 4. Pacote do Gemini CLI ---
-// Converte os subagentes (formato Claude) para o formato do Gemini: tools MCP
-// mcp__plugin_apipass-integrations_apipass__X -> mcp_apipass_X.
-function toGeminiAgent(text, path) {
-  const fm = parseFrontmatter(text, path);
-  if (!fm) return null;
-  const tools = (fm.data.tools || '')
-    .split(',')
-    .map((t) => t.trim())
-    .filter(Boolean)
-    .map((t) => t.replace(/^mcp__(?:plugin_[^_]+(?:_[^_]+)*?_)?apipass__/, 'mcp_apipass_'));
-  const yamlStr = (s) => JSON.stringify(s);
-  const head = ['---', `name: ${fm.data.name}`, `description: ${yamlStr(fm.data.description)}`];
-  if (tools.length) head.push('tools:', ...tools.map((t) => `  - ${t}`));
-  head.push('---', '');
-  return head.join('\n') + fm.body;
-}
-
-if (!CHECK && errors.length === 0) {
-  rmSync(GEMINI_DIST, { recursive: true, force: true });
-  mkdirSync(GEMINI_DIST, { recursive: true });
-  cpSync(join(GEMINI_ADAPTER, 'gemini-extension.json'), join(GEMINI_DIST, 'gemini-extension.json'));
-  cpSync(join(GEMINI_ADAPTER, 'GEMINI.md'), join(GEMINI_DIST, 'GEMINI.md'));
-  cpSync(join(GEMINI_ADAPTER, 'policies'), join(GEMINI_DIST, 'policies'), { recursive: true });
-  cpSync(skillsDir, join(GEMINI_DIST, 'skills'), { recursive: true });
-  cpSync(join(ROOT, 'LICENSE'), join(GEMINI_DIST, 'LICENSE'));
-  const agentsDir = join(PLUGIN, 'agents');
-  if (existsSync(agentsDir)) {
-    mkdirSync(join(GEMINI_DIST, 'agents'), { recursive: true });
-    for (const f of readdirSync(agentsDir).filter((f) => f.endsWith('.md'))) {
-      const converted = toGeminiAgent(readFileSync(join(agentsDir, f), 'utf8'), join(agentsDir, f));
-      if (converted) writeFileSync(join(GEMINI_DIST, 'agents', f), converted);
-    }
-  }
-  console.log(`  pacote Gemini: ${rel(GEMINI_DIST)}`);
-
-  if (PACK) {
-    const tarball = join(DIST, 'apipass-integrations.tar.gz');
-    execFileSync('tar', ['-czf', tarball, '-C', GEMINI_DIST, '.']);
-    console.log(`  release Gemini: ${rel(tarball)}`);
-  }
-}
 
 if (drift.length) errors.push(`arquivos dessincronizados (rode "node scripts/build.mjs"): ${drift.join(', ')}`);
 if (errors.length) {

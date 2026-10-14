@@ -19,9 +19,8 @@
  * objeto vazio no Cursor (sem campo "permission"), que mantem o fluxo de
  * aprovacao padrao do usuario e NAO sobrescreve outros servidores MCP.
  *
- * Codex e Gemini CLI nao usam este script: o gate e declarativo
- * (approval_mode "prompt" no .codex-plugin/plugin.json e policy "ask_user" no
- * pacote do Gemini).
+ * O Codex nao usa este script: o gate e declarativo (approval_mode "prompt" no
+ * .codex-plugin/plugin.json).
  */
 
 const OPERACOES = {

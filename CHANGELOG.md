@@ -2,13 +2,12 @@
 
 ## 0.19.0
 ### Adicionado
-- **Suporte multi-ferramenta: Codex, GitHub Copilot (CLI e VS Code), Cursor e Gemini CLI**, alem do Claude Code. A fonte continua unica em `plugins/apipass-integrations/` (skills no padrao aberto Agent Skills + servidor MCP hospedado); cada ferramenta ganhou so o seu manifesto/adapter:
+- **Suporte multi-ferramenta: Codex, GitHub Copilot (CLI e VS Code) e Cursor**, alem do Claude Code. A fonte continua unica em `plugins/apipass-integrations/` (skills no padrao aberto Agent Skills + servidor MCP hospedado); cada ferramenta ganhou so o seu manifesto:
   - Codex: `plugins/apipass-integrations/.codex-plugin/plugin.json` (o marketplace `.claude-plugin/marketplace.json` ja e lido pelo Codex).
   - Cursor: `plugins/apipass-integrations/.cursor-plugin/plugin.json` + `.cursor-plugin/marketplace.json` na raiz.
   - Copilot: le o formato do Claude direto; `.github/plugin/marketplace.json` gerado como espelho.
-  - Gemini CLI: `adapters/gemini/` (manifesto, `GEMINI.md`, policy). Como o Gemini exige o manifesto na raiz do pacote, o pacote e montado por `scripts/build.mjs` e publicado como asset da release pelo workflow `release.yml`.
-- **Gate de confirmacao equivalente em todas as ferramentas** para `publish_flow`, `unpublish_flow` e `run_test_flow`: hook `ask` (Claude/Copilot), `beforeMCPExecution` com `permission: ask` (Cursor), `approval_mode: "prompt"` (Codex) e policy `ask_user` (Gemini).
-- **`scripts/build.mjs`**: sincroniza a versao em todos os manifestos, valida as skills (nome = diretorio, descricao <= 1024, sem referencias exclusivas do Claude) e monta o pacote do Gemini. Workflow `validate.yml` roda o `--check` em todo PR.
+- **Gate de confirmacao equivalente em todas as ferramentas** para `publish_flow`, `unpublish_flow` e `run_test_flow`: hook `ask` (Claude/Copilot), `beforeMCPExecution` com `permission: ask` (Cursor) e `approval_mode: "prompt"` (Codex).
+- **`scripts/build.mjs`**: sincroniza a versao em todos os manifestos e valida as skills (nome = diretorio, descricao <= 1024, sem referencias exclusivas do Claude). Workflow `validate.yml` roda o `--check` em todo PR.
 ### Alterado
 - **Skills neutras de ferramenta:** referencias `/apipass-integrations:<skill>` viraram "skill `<skill>`"; subagentes, `AskUserQuestion`, `anthropic-skills:docx` e `$ARGUMENTS` agora sao citados como opcionais/exemplos do Claude, com alternativa para as demais ferramentas. Comportamento no Claude Code inalterado.
 - **Hook `confirm-publish.js`** agora filtra o nome da tool internamente (algumas ferramentas, como o VS Code, ignoram o `matcher`) e aceita o formato do Cursor (`--cursor`). O `matcher` do `hooks.json` ficou agnostico ao prefixo do nome da tool MCP.

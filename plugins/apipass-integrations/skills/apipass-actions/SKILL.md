@@ -31,7 +31,7 @@ Um fluxo e salvo via `save_flow_development` com um array de `steps`. Cada step 
 
 | Campo | Tipo | Quem define | Notas |
 |---|---|---|---|
-| `id` | string | builder | unico no fluxo; se numerico, conta para `lastGeneratedStepId` |
+| `id` | string | builder | unico no fluxo (ver padroes de id em `build-flow`) |
 | `label` | string | builder | rotulo exibido |
 | `type` | string | catalogo | o `type` EXATO da acao (de `get_action`) |
 | `authProvider` | string | catalogo/auth | provedor de auth da acao |

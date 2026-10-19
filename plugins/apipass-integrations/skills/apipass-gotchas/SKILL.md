@@ -10,7 +10,7 @@ disable-model-invocation: false
 
 | Sintoma | Causa provavel | Correcao |
 |---|---|---|
-| "Validacao do fluxo falhou — nada foi salvo" | `id`/`type` vazios, ids duplicados, ou `lastGeneratedStepId` incorreto | Leia a lista de erros do retorno e corrija; ajuste os contadores (= ultimo id gerado + 1; o stop `a999` e sentinela e nao conta) |
+| "Validacao do fluxo falhou — nada foi salvo" | `id`/`type` vazios ou ids duplicados | Leia a lista de erros do retorno e corrija (os contadores `lastGenerated*` sao calculados pela API, nao envie) |
 | JSON Schema da trigger REST nao aparece na UI | Usou `requestBodySchema` (campo invalido) ou passou o schema como objeto JSON | O campo correto e `jsonSchema` com valor como **string serializada** (com `\r\n`). Exemplo: `"jsonSchema": "{\r\n  \"type\": \"object\"...\r\n}\r\n"`. Nunca use `requestBodySchema`. |
 | JSON Schema de response no StopV2Step nao aparece no Swagger gerado (`generate_oas_documentation`), mesmo com `jsonSchema` presente no item de `responses[]` | Colocou `jsonSchema` solto como irmao de `responseData`/`groups`/`description` (fora do objeto `oas`) -- `save_flow_development`/`publish_flow` aceitam sem erro, mas o gerador de OAS ignora silenciosamente esse campo | O schema de response so e lido dentro do envelope `oas`: `"oas": { "mediaType": "application/json", "headers": [], "jsonSchema": "<string>" }` (shape completo na skill `apipass-patterns`, secao "Documentacao OpenAPI (OAS)"). Confirme rodando `generate_oas_documentation` apos publicar e conferindo que `responses.<status>.content` vem preenchido |
 | Switch apos HTTP roteia errado (vai para sucesso mesmo em erro da API) | Usou `INPUT_IS_NOT_NULL` no body como proxy de sucesso | Use `$.aN.headers.responseStatusCode` com `NUMBER_DOES_NOT_MATCH "200"` para detectar erro; sucesso vai para o `default`. |
@@ -88,7 +88,7 @@ Ver a skill `create-action` para o processo completo. Armadilhas:
 
 ## Regras
 - **Nunca invente a config** — para `fixed` use o `stepSkeleton` de `list_actions` (campos no topo); para `catalog` use `inputData` via `get_action_struct`. So leia um fluxo real (`get_flow_development`) para campos estruturais (responses/cases/loopSteps) ou se o skeleton divergir.
-- **Contadores**: `lastGeneratedStepId` = id do ultimo step gerado **+ 1**; o stop `a999` e sentinela e nao conta.
+- **Contadores**: `lastGeneratedStepId`/`lastGeneratedLoopId` sao calculados pela API a partir dos ids dos steps — **nao envie** em `save_flow_development`. Os ids dos steps precisam seguir o padrao (`a<n>`, `l<n>`, `l<n>a<n>`) para entrarem na conta; `trigger` e o stop `a999` sao fixos e nao contam.
 - **Interpolacao**: mustache `{{$.<id>}}` (ex. `{{$.trigger.body}}`), nunca `${...}`.
 - **Efeito colateral exige confirmacao**: `create_*`, `save_flow_development`, `publish_flow`, `delete_*`.
 

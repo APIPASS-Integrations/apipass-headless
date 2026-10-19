@@ -1,5 +1,9 @@
 # Changelog — apipass-integrations
 
+## 0.19.1
+### Alterado
+- **Skills nao orientam mais o envio de `lastGeneratedStepId`/`lastGeneratedLoopId`** em `save_flow_development` (`apipass-patterns`, `apipass-gotchas`, `apipass-actions`, `build-flow`, `review-flow`). Os contadores passaram a ser calculados pela API a partir dos ids dos steps (CONSOLE-1813) e o servidor MCP deixou de aceita-los/valida-los; a regra de ids (`a<n>`, `l<n>`, `l<n>a<n>`; `trigger` e `a999` fixos, fora da conta) segue documentada. A regra C3 do `review-flow` foi removida e a C2 virou checagem do padrao de ids.
+
 ## 0.19.0
 ### Adicionado
 - **Suporte multi-ferramenta: Codex, GitHub Copilot (CLI e VS Code) e Cursor**, alem do Claude Code. A fonte continua unica em `plugins/apipass-integrations/` (skills no padrao aberto Agent Skills + servidor MCP hospedado); cada ferramenta ganhou so o seu manifesto:

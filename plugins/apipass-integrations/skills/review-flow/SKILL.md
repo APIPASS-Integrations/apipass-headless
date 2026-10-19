@@ -35,7 +35,7 @@ Verificar `apipass_auth_status`. Se não autenticado, chamar `apipass_login` ant
 Executar **em paralelo**:
 
 ```
-get_flow_development(flowId)          → estrutura completa (steps, counters, logEnabled)
+get_flow_development(flowId)          → estrutura completa (steps)
 get_flow_info(flowId)                 → metadados (nome, trigger, projeto)
 get_published_environments_for_flow(flowId) → environments publicados (para regra S1)
 ```

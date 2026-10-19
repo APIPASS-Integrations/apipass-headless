@@ -2,7 +2,7 @@
 
 ## 0.19.1
 ### Alterado
-- **Skills nao orientam mais o envio de `lastGeneratedStepId`/`lastGeneratedLoopId`** em `save_flow_development` (`apipass-patterns`, `apipass-gotchas`, `apipass-actions`, `build-flow`, `review-flow`). Os contadores passaram a ser calculados pela API a partir dos ids dos steps (CONSOLE-1813) e o servidor MCP deixou de aceita-los/valida-los; a regra de ids (`a<n>`, `l<n>`, `l<n>a<n>`; `trigger` e `a999` fixos, fora da conta) segue documentada. A regra C3 do `review-flow` foi removida e a C2 virou checagem do padrao de ids.
+- **Skills nao orientam mais o envio de `lastGeneratedStepId`/`lastGeneratedLoopId`** em `save_flow_development` (`apipass-patterns`, `apipass-gotchas`, `apipass-actions`, `build-flow`, `review-flow`). Os contadores passaram a ser calculados pela API a partir dos ids dos steps (CONSOLE-1813) e o servidor MCP deixou de aceita-los/valida-los; a regra de ids (`a<n>`, `l<n>`, `l<n>a<n>`; `trigger` e `a999` fixos, fora da conta) segue documentada. `save_flow_development` tambem deixou de receber `logEnabled` (flag de fluxo sem uso; o log e por step e segue documentado). A regra C3 do `review-flow` foi removida e a C2 virou checagem do padrao de ids.
 
 ## 0.19.0
 ### Adicionado

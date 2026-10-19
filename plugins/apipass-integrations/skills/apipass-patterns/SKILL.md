@@ -9,7 +9,7 @@ disable-model-invocation: false
 ## Montagem incremental
 ```
 create_flow(name, projectId, confirm: true)   -> flowId
-save_flow_development(id: flowId, steps: [...], logEnabled, confirm: true)
+save_flow_development(id: flowId, steps: [...], confirm: true)
 ```
 Para alterar um fluxo existente: `get_flow_development(flowId)` -> ajuste os steps -> `save_flow_development(...)`.
 

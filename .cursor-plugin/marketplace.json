@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "APIPASS Headless — opere a plataforma APIPASS (iPaaS) sem a interface, em linguagem natural.",
-    "version": "0.19.0"
+    "version": "0.19.1"
   },
   "plugins": [
     {

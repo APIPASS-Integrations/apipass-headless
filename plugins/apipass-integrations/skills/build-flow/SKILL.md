@@ -34,7 +34,7 @@ Siga os padroes abaixo ao montar o array de steps. Nunca invente IDs, tipos ou i
 - Trigger sempre: `id: "trigger"`
 - Steps sequenciais: `id: "a0"`, `"a1"`, `"a2"`, etc.
 - Step de fim sempre: `id: "a999"`
-- `lastGeneratedStepId` = maior numero sufixo dos steps regulares (ex: a0,a1,a2 → `lastGeneratedStepId: 2`)
+- Os contadores `lastGeneratedStepId`/`lastGeneratedLoopId` sao calculados pela API — nao envie
 
 ### Trigger scheduler
 ```json
@@ -94,7 +94,7 @@ O único tipo de loop válido é **`.utility.loop.LoopCanvas`** (image `"loop"`)
 
 O `LoopCanvas` carrega o corpo do loop em `loopSteps` (NÃO em steps de topo). Início/fim do corpo são
 `.StartLoop` (`l1StartLoop`) e `.StopLoop` (`l1999`); os passos do corpo usam ids `l1a0`, `l1a1`, … e
-`lastGeneratedLoopId` reflete o número do loop (`l1` → 1).
+o contador de loops é calculado pela API a partir dos ids `l<n>`.
 
 **Campos obrigatórios do loop — `loopType` E `source` (não só `valid`):**
 - `loopType: "EACH_ITEM"` — **sem esse campo, a UI pode ATÉ mostrar "Item de Array" no dropdown "Tipo de Loop" (valor de exibição/default), mas a configuração real não fica persistida e a execução roda indefinidamente** (nunca termina o loop). Sempre setar explicitamente.
@@ -305,10 +305,10 @@ Ao reconstruir ou **portar** um fluxo para OUTRA conta, lembre que custom action
 1. `create_project` (se necessario) — exige `confirm: true`.
 2. `create_flow(name, projectId)` — exige `confirm: true`. Guarde o `flowId`.
 3. Monte o array de `steps` seguindo os padroes da secao 2b.
-4. `save_flow_development(id, steps, lastGeneratedStepId, lastGeneratedLoopId, logEnabled, confirm: true)`.
+4. `save_flow_development(id, steps, confirm: true)`.
 
 ## 4. Validacao (automatica no save)
-O `save_flow_development` valida ANTES de enviar e bloqueia em caso de erro (ids duplicados, `id`/`type` vazios, `lastGeneratedStepId` menor que o maior id de step). Corrija os erros listados e tente de novo. Campos obrigatorios com default seguro sao preenchidos automaticamente — confira os avisos.
+O `save_flow_development` valida ANTES de enviar e bloqueia em caso de erro (ids duplicados, `id`/`type` vazios). Corrija os erros listados e tente de novo. Campos obrigatorios com default seguro sao preenchidos automaticamente — confira os avisos.
 
 ## 4b. Versionar e publicar (cadeia)
 A publicacao depende de uma versao, e a versao depende do save. Ordem:
@@ -327,7 +327,7 @@ Apos publicar/rodar, analise logs (ver a skill `apipass-gotchas`): `list_flow_ex
 - Nunca invente IDs, tipos ou imagens de steps — siga os padroes da secao 2b.
 - Nao existe um `.body` universal — o shape de saida varia por tipo de step (ver secao "Acesso a saida de steps"). Confirme sempre via `get_action_struct`/`get_flow_development` antes de assumir `.body`.
 - Operacoes com efeito colateral (`create_*`, `save_flow_development`, `publish_flow`, `delete_*`) exigem `confirm: true` E confirmacao do usuario.
-- Contadores `lastGeneratedStepId`/`lastGeneratedLoopId` devem refletir os ids usados (ver patterns).
+- Nao envie `lastGeneratedStepId`/`lastGeneratedLoopId`: a API calcula (ver patterns).
 
 ## Skills relacionadas
 - skill `build-agent-flow` — construir fluxos de Agente de IA / RAG (topologia hub-and-spoke)

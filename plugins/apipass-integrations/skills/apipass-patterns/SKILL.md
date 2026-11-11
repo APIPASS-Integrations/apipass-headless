@@ -1,6 +1,6 @@
 ---
 name: apipass-patterns
-description: 'Estrutura de um fluxo da APIPASS — montagem incremental, contadores lastGeneratedStepId/lastGeneratedLoopId, leitura da estrutura, versoes e publicacao (environment).'
+description: 'Estrutura de um fluxo da APIPASS — montagem incremental, ids dos steps, leitura da estrutura, versoes e publicacao (environment).'
 disable-model-invocation: false
 ---
 
@@ -9,15 +9,15 @@ disable-model-invocation: false
 ## Montagem incremental
 ```
 create_flow(name, projectId, confirm: true)   -> flowId
-save_flow_development(id: flowId, steps: [...], lastGeneratedStepId, lastGeneratedLoopId, logEnabled, confirm: true)
+save_flow_development(id: flowId, steps: [...], confirm: true)
 ```
 Para alterar um fluxo existente: `get_flow_development(flowId)` -> ajuste os steps -> `save_flow_development(...)`.
 
-## Contadores (regra critica)
-- `lastGeneratedStepId` = **id numerico do ultimo step gerado + 1** (NAO e apenas ">= o maior id"). Ex.: se o maior step gerado e `a0`, entao `lastGeneratedStepId: 1`.
-- **O step de fim e SENTINELA**: `a999` (`.StopV2Step`/`.StopStep`) usa um id fixo convencional e **NAO conta** para o calculo. Ignore-o ao achar o maior id gerado.
-- Ao adicionar um step novo, use o valor atual de `lastGeneratedStepId` como `id` numerico do novo step e incremente o contador.
-- `lastGeneratedLoopId`: idem para loops. >= 0.
+## Contadores (calculados pela API)
+- `lastGeneratedStepId` e `lastGeneratedLoopId` (e o `lastGeneratedStepId` de cada `LoopCanvas`) sao **calculados pela API** a partir dos ids dos steps. **Nao os envie** em `save_flow_development` — qualquer valor enviado e ignorado.
+- Para entrarem na conta, os ids devem seguir o padrao: `a<n>` (steps), `l<n>` (loops) e `l<n>a<n>` (steps dentro do loop).
+- `trigger` e o step de fim (`a999`, `.StopV2Step`/`.StopStep`) tem ids fixos e **nao contam**.
+- Ao adicionar um step novo, use o proximo numero livre (maior sufixo + 1) no id.
 
 ## Ler a estrutura
 - `get_flow_development(flowId)` — os steps (use para aprender shapes e para editar).

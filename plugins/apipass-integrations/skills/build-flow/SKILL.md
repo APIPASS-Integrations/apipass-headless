@@ -324,7 +324,7 @@ Para consumir/publicar mensagens via fila (AMS) ou persistir dados no MongoDB na
 - Campos da acao em `inputData: {...}`
 - Interpolacao: `"{{$.a2.body.campo}}"`
 
-### Campos obrigatorios em todos os steps
+### Campos comuns a todos os steps
 ```json
 {
   "authProvider": "",
@@ -338,9 +338,12 @@ Para consumir/publicar mensagens via fila (AMS) ou persistir dados no MongoDB na
   "valid": true,
   "mappingAttributes": {},
   "mappingAttributesRootArray": {},
-  "trigger": 0
+  "trigger": false
 }
 ```
+- **`trigger` e booleano**: `true` so no step `trigger`, `false` (ou ausente) nos demais. Nunca `0`/`1` — o `save_flow_development` recusa. Ao editar um fluxo antigo salvo com `trigger: 0`, troque por `false`.
+- **`positionX`/`positionY` sao numeros** (ex. `8190`), nunca string.
+- Obrigatorios em todo step: `id`, `label`, `type`, `image`, `valid`, `positionX`, `positionY`. Os demais acima sao opcionais — fluxos montados na interface nao os trazem em todo step, e o save aceita de volta o que `get_flow_development` devolveu.
 
 ## 2c. Autorizacoes (credenciais) — referencie, nunca embuta
 **Principio central da plataforma: um step NUNCA carrega credenciais/segredos embutidos. Ele referencia uma autorizacao ja cadastrada pelos campos `authId` + `authProvider`.**

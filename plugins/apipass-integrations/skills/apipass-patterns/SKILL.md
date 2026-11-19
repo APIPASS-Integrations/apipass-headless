@@ -147,7 +147,7 @@ Sempre preencha o campo `oas` ao criar ou editar fluxos com RestTrigger.
 ## Campos derivados no save (nao setar a mao)
 O `save_flow_development` preenche/deriva automaticamente alguns campos — o builder NAO precisa enviar:
 - `usedSteps` — dependencias entre steps, derivadas das interpolacoes `{{$.<id>}}` (confirma que as referencias resolveram).
-- Defaults seguros: `doc`, `timeout`, `mappingAttributesRootArray`, `httpProtocolVersion`/`httpTlsVersion`, `trigger: 0`.
+- Defaults seguros: `doc`, `timeout`, `mappingAttributesRootArray`, `httpProtocolVersion`/`httpTlsVersion`, `trigger: false` (booleano: `true` so no step `trigger`; nunca `0`/`1`).
 Envie apenas os campos de intencao; releia com `get_flow_development` para conferir o que o engine completou. Ao comparar/diferenciar fluxos (ex. harness), normalize esses campos — senao geram falso-positivo de divergencia.
 
 ## Validacao no save

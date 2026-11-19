@@ -1,5 +1,9 @@
 # Changelog — apipass-integrations
 
+## 0.20.1
+### Corrigido
+- **`trigger` dos steps e booleano, nao numero** (`build-flow`, `apipass-patterns`). A lista de campos comuns ensinava `"trigger": 0`; o editor e o core-route usam booleano (`true` so no step `trigger`). O servidor MCP 0.13.1 passa a recusar `trigger` numerico no `save_flow_development`, entao fluxos antigos salvos com `trigger: 0` precisam de `false` no proximo save. A `build-flow` tambem explicita que `positionX`/`positionY` sao numeros e quais campos sao obrigatorios em todo step.
+
 ## 0.20.0
 ### Adicionado
 - **Skill `build-mcp-server`** (CONSOLE-2100): cria um MCP Server num projeto, vincula fluxos de trigger MCP Tool como ferramentas (`name`/`title`/`description` no vinculo), publica por environment, devolve a URL de cada um e configura a autenticacao opcional. Lista as mudancas que quebram agentes ja configurados (Server ID, `name` da ferramenta, despublicar, remover ferramenta, trocar o trigger do fluxo) e manda avisar antes, ja que com o servidor publicado toda alteracao vai na hora para os environments marcados. Usa as tools de MCP Server do servidor MCP 0.13.0.

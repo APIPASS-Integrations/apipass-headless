@@ -4,7 +4,8 @@
  *
  * Forca uma confirmacao explicita do usuario antes de qualquer operacao com
  * efeito real sobre um environment: publicar, despublicar ou executar um fluxo de
- * teste.
+ * teste, e publicar, despublicar ou trocar a autenticacao de um MCP Server (o que
+ * muda o que os agentes enxergam na hora).
  *
  * Formatos suportados:
  *   (padrao)   Claude Code, GitHub Copilot CLI e VS Code (formato de hook do Claude):
@@ -23,10 +24,14 @@
  * .codex-plugin/plugin.json).
  */
 
+// A ordem importa: o casamento e por sufixo, entao unpublish_* vem antes de publish_*.
 const OPERACOES = {
   unpublish_flow: 'DESPUBLICAR o fluxo do environment',
   publish_flow: 'PUBLICAR a versao do fluxo no environment',
   run_test_flow: 'EXECUTAR o fluxo de teste no environment (cria execucao real)',
+  unpublish_mcp_server: 'DESPUBLICAR o MCP Server do environment (agentes que usam a URL deixam de funcionar)',
+  publish_mcp_server: 'PUBLICAR o MCP Server no environment (as ferramentas ficam disponiveis para agentes)',
+  configure_mcp_server_auth: 'TROCAR a autenticacao do MCP Server (vale na hora em todos os environments publicados)',
 };
 
 const isCursor = process.argv.includes('--cursor');
@@ -34,19 +39,20 @@ const isCursor = process.argv.includes('--cursor');
 function operacaoDe(toolName) {
   // Nomes variam por ferramenta: mcp__plugin_x_apipass__publish_flow (Claude),
   // mcp_apipass_publish_flow (VS Code), apipass-publish_flow (Copilot CLI),
-  // publish_flow (Cursor). Casamos pelo sufixo; unpublish vem antes de publish.
+  // publish_flow (Cursor). Casamos pelo sufixo.
   return Object.keys(OPERACOES).find((k) => String(toolName || '').endsWith(k));
 }
 
 function montarRazao(key, input) {
   const acao = key ? OPERACOES[key] : 'realizar uma operacao com efeito real sobre um environment da APIPASS';
   const alvo = [];
+  if (input.mcpServerId) alvo.push(`MCP Server ${input.mcpServerId}`);
   if (input.flowId) alvo.push(`fluxo ${input.flowId}`);
   const environmentId = input.environmentId || input.stageId;
   if (environmentId) alvo.push(`environment ${environmentId}`);
   if (input.historyId) alvo.push(`versao ${input.historyId}`);
   const detalhe = alvo.length ? ` (${alvo.join(', ')})` : '';
-  return `Confirmacao obrigatoria: prestes a ${acao}${detalhe}. Aprove apenas se o environment e o fluxo estiverem corretos.`;
+  return `Confirmacao obrigatoria: prestes a ${acao}${detalhe}. Aprove apenas se o environment e o ${input.mcpServerId ? 'MCP Server' : 'fluxo'} estiverem corretos.`;
 }
 
 function responder(obj) {

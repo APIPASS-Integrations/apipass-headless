@@ -88,6 +88,33 @@ A imagem do trigger REST é **`"api"`** (NÃO `"rest"` — `"rest"` renderiza im
 
 **`RestTrigger` pode exigir Authorization via `authIds[]` — mas isso quebra link clicavel.** E possivel setar `authProvider: "ENDPOINT"` + `authIds: ["<authId>"]` (array, nao o `authId` singular) apontando pra uma credencial `ENDPOINT`. Isso faz a plataforma validar o header `Authorization` da requisicao real contra o `token` guardado na credencial **antes mesmo do fluxo executar** — e uma protecao de verdade a nivel de plataforma (sem header → 401 automatico; com o token, cru ou `Bearer <token>` → 200), nao uma checagem manual dentro do fluxo. **Trade-off:** como exige um header HTTP customizado, **nao funciona com um link clicado direto no navegador** (browsers nao anexam `Authorization` numa navegacao simples) — serve so para chamada programatica (outro sistema/script). Se o caso de uso e um dashboard/relatorio que humanos abrem clicando num link, use protecao via query param (`?key=...`, checada dentro do proprio fluxo no `.StopV2Step` com `groups`/`TEXT_DOES_NOT_MATCH`) — mais fraca (chave na URL, sem log de acesso), mas e a que funciona pra esse caso. **Pergunte ao usuario antes de sugerir/implementar auth por header num RestTrigger** — so faz sentido se o consumidor for outro sistema, nao um humano clicando num link.
 
+### Trigger MCP Tool (ferramenta de agente de IA)
+Use quando o fluxo vai ser **ferramenta de um MCP Server** (um agente de IA chama o fluxo). So fluxos com este trigger podem ser vinculados a um servidor — a montagem do servidor fica na skill `build-mcp-server`. A imagem e **`"mcp_tool"`**.
+```json
+{
+  "id": "trigger",
+  "trigger": true,
+  "label": "Início",
+  "image": "mcp_tool",
+  "nodeSize": "small",
+  "type": ".trigger.mcp.McpToolTrigger",
+  "description": "Consulta o saldo em estoque de um produto pelo SKU",
+  "readOnlyHint": true,
+  "destructiveHint": false,
+  "idempotentHint": true,
+  "openWorldHint": false,
+  "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"sku\": { \"type\": \"string\", \"description\": \"SKU do produto\" }\n  },\n  \"required\": [\"sku\"]\n}",
+  "previousSteps": [],
+  "nextSteps": [{ "id": "a0", "type": "...", "sourceUUID": "integration-step-uuid-sourceEndpoint-trigger", "targetUUID": "integration-step-uuid-targetEndpoint-a0" }]
+}
+```
+- **`inputSchema`** (obrigatorio) — JSON Schema dos argumentos da ferramenta, como **string** (o editor grava o texto digitado; objeto tambem e aceito). A raiz precisa ser `"type": "object"`; sem `$schema` vale o draft 2020-12 (tambem aceita 2019-09 e draft-07). O `save_flow_development` recusa schema invalido. Ferramenta sem argumentos: `{"type":"object","properties":{}}`. E o contrato que o agente usa para montar a chamada: descreva cada propriedade (`description`) e marque as obrigatorias.
+- **Anotacoes** (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) — dizem ao agente o risco de chamar a ferramenta. Sem valor, o runtime assume o pior caso: `readOnlyHint: false`, `destructiveHint: true`, `idempotentHint: false`, `openWorldHint: true`. Uma consulta pura deve declarar `readOnlyHint: true` e `destructiveHint: false`.
+- **`description`** (opcional) — so documenta o fluxo para quem monta o servidor; **nao** vai para o agente. O texto que o agente ve e o `title`/`description` do vinculo com o servidor (skill `build-mcp-server`).
+- **Argumentos e resposta:** os argumentos da chamada chegam em `{{$.trigger.<campo>}}` (no NodeJS, `$.trigger.<campo>`), ja validados contra o `inputSchema` antes de o fluxo rodar. O agente recebe o corpo da resposta do step de fim (`responses[].responseData`), entao preencha `responses` como no trigger REST: uma resposta `default` para o caminho feliz e as de erro com `groups`. Execucao com erro ou uma resposta de erro do stop chegam ao agente como erro da ferramenta, com o id da execucao.
+- **Tempo de espera:** a chamada espera o fluxo terminar ate um limite da plataforma (igual para todas as ferramentas); se estourar, o agente recebe erro com o id da execucao e o fluxo **continua** rodando. Mantenha o fluxo curto — processamento longo deve ir para fila (AMS) ou subfluxo assincrono.
+- **Trocar o trigger** de um fluxo que ja e ferramenta (ou arquivar o fluxo) desfaz o vinculo com os servidores e descarta o nome da ferramenta — confira antes com `list_flow_mcp_servers(flowId)`.
+
 ### Loop — use SEMPRE o v3 (`LoopCanvas`)
 O único tipo de loop válido é **`.utility.loop.LoopCanvas`** (image `"loop"`). Os tipos
 `.utility.loop.LoopUtility` e `.utility.loop.LoopUtilityV2` foram **descontinuados** — nunca os use.
@@ -348,6 +375,8 @@ A publicacao depende de uma versao, e a versao depende do save. Ordem:
 3. `publish_flow(environmentId, historyId, confirm: true)` — publica a versao no environment (use `list_environments` / `get_published_environments_for_flow` para achar os ids).
 Para testar antes de publicar: `run_test_flow(flowId, environmentId, payload, confirm: true)`. Todas essas operacoes tem efeito real — confirme com o usuario.
 
+Fluxo com trigger MCP Tool: depois de publicado, vincule-o a um MCP Server e publique o servidor (skill `build-mcp-server`). A ferramenta so aparece para o agente nos environments onde o fluxo esta publicado. Antes de **despublicar** um fluxo, confira com `list_flow_mcp_servers(flowId)` se ele e ferramenta de algum servidor publicado e avise o usuario: os agentes perdem a ferramenta na hora.
+
 ## 5. Investigar execucoes
 Apos publicar/rodar, analise logs (ver a skill `apipass-gotchas`): `list_flow_execution_logs` -> `get_flow_execution_log` -> `list_step_execution_logs` -> `read_step_payload`.
 
@@ -362,6 +391,7 @@ Apos publicar/rodar, analise logs (ver a skill `apipass-gotchas`): `list_flow_ex
 
 ## Skills relacionadas
 - skill `build-agent-flow` — construir fluxos de Agente de IA / RAG (topologia hub-and-spoke)
+- skill `build-mcp-server` — expor fluxos com trigger MCP Tool como ferramentas de um MCP Server
 - skill `apipass-agent-actions` — anatomia das acoes de IA e do agente
 - skill `research-action` — pesquisar uma acao do catalogo
 - skill `create-action` — criar uma custom action a partir de doc de API

@@ -1,6 +1,6 @@
 ---
 name: apipass-patterns
-description: 'Estrutura de um fluxo da APIPASS — montagem incremental, ids dos steps, leitura da estrutura, versoes e publicacao (environment).'
+description: 'Estrutura de um fluxo da APIPASS — montagem incremental, ids dos steps, leitura da estrutura, versoes, publicacao (environment) e o modelo de MCP Server (fluxos como ferramentas de agente).'
 disable-model-invocation: false
 ---
 
@@ -41,6 +41,25 @@ Depois:
 >     "groups": [ { "rules": [ { "input": "{{$.flowExecution.status}}", "condition": "TEXT_DOES_NOT_MATCH", "expected": "OK" } ] } ] }
 > ]
 > ```
+
+---
+
+## MCP Servers — fluxos como ferramentas de agente
+Um **MCP Server** e um recurso de projeto, listado ao lado dos fluxos (`list_mcp_servers(projectId)`). Montagem passo a passo na skill `build-mcp-server`; o trigger na skill `build-flow` (secao "Trigger MCP Tool").
+
+| Conceito | Onde mora | Observacao |
+|---|---|---|
+| Server ID | servidor (`serverId`) | identificador legivel da URL, `[a-z0-9-]`, unico na conta. Diferente do `id` opaco (`mcpServerId` nas tools). |
+| Instrucao | servidor (`instructions`) | lida pelo LLM para decidir quando usar o servidor. |
+| Ferramenta | vinculo servidor ↔ fluxo | `name` (o que o agente chama, `[a-z0-9_-]`, ate 64, unico no servidor), `title` e `description` (o que o agente ve). Nao deriva do nome do fluxo; renomear o fluxo nao muda a ferramenta. |
+| Contrato de execucao | trigger MCP Tool do fluxo | `inputSchema` e anotacoes, compartilhados por todos os vinculos do fluxo. |
+| Publicacao | servidor, por environment | URL `https://{flowEngineIdentifier}.core.apipass.com.br/mcp/{environment}/{serverId}`; so environment cloud. |
+
+Regras que mais confundem:
+- **Disponibilidade e dinamica:** a ferramenta aparece num environment so se o fluxo dela tambem estiver publicado ali (`list_mcp_server_tools` mostra `AVAILABLE` / `FLOW_NOT_PUBLISHED` / `UNKNOWN`). Despublicar o fluxo tira a ferramenta do agente sem tocar no servidor.
+- **Sem rascunho:** com o servidor publicado, alterar Server ID, instrucao ou ferramentas publica na hora em todos os environments marcados. Renomear o servidor nao publica.
+- **Concorrencia:** `update_mcp_server` e `configure_mcp_server_auth` exigem a `revision` atual; revisao velha volta 409.
+- **Cada chamada de ferramenta e uma execucao do fluxo** — aparece nos logs como qualquer execucao (`list_flow_execution_logs`).
 
 ---
 

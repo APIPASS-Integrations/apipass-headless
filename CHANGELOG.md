@@ -1,5 +1,9 @@
 # Changelog — apipass-integrations
 
+## 0.20.2
+### Corrigido
+- **Trigger MCP Tool: argumentos e status da resposta** (`build-flow`, `build-mcp-server`), confirmados num teste de ponta a ponta em producao. Os argumentos chegam em `{{$.trigger.body.<campo>}}` (nao em `$.trigger.<campo>`, que resolve vazio sem erro), e o trigger expoe quem chamou em `$.trigger.caller`. No stop v2 desse trigger o `responseData.status` e `SUCCESS`/`ERROR`, nunca codigo HTTP: com `"200"` toda chamada chegava ao agente como erro, mesmo com todos os steps `OK`. A `build-flow` ganha o exemplo de `responses` com `SUCCESS`/`ERROR`, e a `build-mcp-server` uma secao de como depurar uma chamada que falha.
+
 ## 0.20.1
 ### Corrigido
 - **`trigger` dos steps e booleano, nao numero** (`build-flow`, `apipass-patterns`). A lista de campos comuns ensinava `"trigger": 0`; o editor e o core-route usam booleano (`true` so no step `trigger`). O servidor MCP 0.13.1 passa a recusar `trigger` numerico no `save_flow_development`, entao fluxos antigos salvos com `trigger: 0` precisam de `false` no proximo save. A `build-flow` tambem explicita que `positionX`/`positionY` sao numeros e quais campos sao obrigatorios em todo step.

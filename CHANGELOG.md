@@ -1,5 +1,12 @@
 # Changelog — apipass-integrations
 
+## 0.20.0
+### Adicionado
+- **Skill `build-mcp-server`** (CONSOLE-2100): cria um MCP Server num projeto, vincula fluxos de trigger MCP Tool como ferramentas (`name`/`title`/`description` no vinculo), publica por environment, devolve a URL de cada um e configura a autenticacao opcional. Lista as mudancas que quebram agentes ja configurados (Server ID, `name` da ferramenta, despublicar, remover ferramenta, trocar o trigger do fluxo) e manda avisar antes, ja que com o servidor publicado toda alteracao vai na hora para os environments marcados. Usa as tools de MCP Server do servidor MCP 0.13.0.
+- **Trigger MCP Tool na skill `build-flow`**: shape do step (`.trigger.mcp.McpToolTrigger`, imagem `mcp_tool`), `inputSchema` como string com raiz `object`, anotacoes com os defaults do runtime, `description` que so documenta o fluxo, argumentos em `{{$.trigger.*}}`, resposta pelo stop e o limite de espera da chamada. Antes de despublicar um fluxo, conferir com `list_flow_mcp_servers` se ele e ferramenta de algum servidor.
+- **Secao "MCP Servers" na skill `apipass-patterns`**: Server ID x `mcpServerId`, onde mora cada atributo, disponibilidade dinamica por environment, publicacao sem rascunho e `revision`.
+- **Gate de confirmacao** para `publish_mcp_server`, `unpublish_mcp_server` e `configure_mcp_server_auth`: hook `confirm-publish.js` (Claude, Copilot, Cursor), `approval_mode: "prompt"` (Codex) e casos no `validate.yml`.
+
 ## 0.19.1
 ### Alterado
 - **Skills nao orientam mais o envio de `lastGeneratedStepId`/`lastGeneratedLoopId`** em `save_flow_development` (`apipass-patterns`, `apipass-gotchas`, `apipass-actions`, `build-flow`, `review-flow`). Os contadores passaram a ser calculados pela API a partir dos ids dos steps (CONSOLE-1813) e o servidor MCP deixou de aceita-los/valida-los; a regra de ids (`a<n>`, `l<n>`, `l<n>a<n>`; `trigger` e `a999` fixos, fora da conta) segue documentada. `save_flow_development` tambem deixou de receber `logEnabled` (flag de fluxo sem uso; o log e por step e segue documentado). A regra C3 do `review-flow` foi removida e a C2 virou checagem do padrao de ids.

@@ -25,3 +25,9 @@ jobs:
           echo "$out" | grep -q '"permission":"ask"'
           out=$(echo '{"tool_name":"list_flows","tool_input":"{}","mcp_server_name":"other"}' | node plugins/apipass-integrations/hooks/confirm-publish.js --cursor)
           test "$out" = '{}'
+          out=$(echo '{"tool_name":"mcp__apipass__unpublish_mcp_server","tool_input":{"mcpServerId":"s","environmentId":"e"}}' | node plugins/apipass-integrations/hooks/confirm-publish.js)
+          echo "$out" | grep -q 'DESPUBLICAR o MCP Server'
+          out=$(echo '{"tool_name":"mcp__apipass__configure_mcp_server_auth","tool_input":{"mcpServerId":"s"}}' | node plugins/apipass-integrations/hooks/confirm-publish.js)
+          echo "$out" | grep -q '"permissionDecision":"ask"'
+          out=$(echo '{"tool_name":"mcp__apipass__add_mcp_server_tool","tool_input":{}}' | node plugins/apipass-integrations/hooks/confirm-publish.js)
+          test -z "$out"

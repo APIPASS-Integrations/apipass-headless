@@ -2,7 +2,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": ".*(publish_flow|unpublish_flow|run_test_flow)$",
+        "matcher": ".*(publish_flow|unpublish_flow|run_test_flow|publish_mcp_server|unpublish_mcp_server|configure_mcp_server_auth)$",
         "hooks": [
           {
             "type": "command",

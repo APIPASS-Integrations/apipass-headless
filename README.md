@@ -13,7 +13,7 @@ Construa, publique, teste e investigue integracoes da APIPASS conversando com a 
 
 O plugin `apipass-integrations` e composto por:
 
-- **Skills** (padrao aberto [Agent Skills](https://agentskills.io)) — construir fluxos, pesquisar acoes, criar custom actions, revisar, documentar e analisar consumo.
+- **Skills** (padrao aberto [Agent Skills](https://agentskills.io)) — construir fluxos, montar MCP Servers, pesquisar acoes, criar custom actions, revisar, documentar e analisar consumo.
 - **Subagentes** especializados — pesquisa de acoes do catalogo e autoria de custom actions em sessao isolada (nas ferramentas que suportam subagentes).
 - **Gate de confirmacao** — confirmacao obrigatoria antes de qualquer operacao com efeito real (publicar, despublicar, testar), implementado no mecanismo nativo de cada ferramenta.
 - **Servidor MCP hospedado** — as ferramentas que falam com a plataforma da APIPASS; nada roda localmente.
@@ -60,7 +60,7 @@ Habilite os agent plugins (`chat.plugins.enabled`), adicione o marketplace `APIP
 Qualquer agente com suporte a MCP e Agent Skills funciona:
 1. Cadastre o servidor MCP HTTP `apipass` apontando para `https://elb.apipass.com.br/mcp`.
 2. Copie as pastas de `plugins/apipass-integrations/skills/` para o diretorio de skills da ferramenta (ex. `~/.agents/skills/`, `.github/skills/`).
-3. Configure a ferramenta para **pedir aprovacao** em `publish_flow`, `unpublish_flow` e `run_test_flow`.
+3. Configure a ferramenta para **pedir aprovacao** em `publish_flow`, `unpublish_flow`, `run_test_flow`, `publish_mcp_server`, `unpublish_mcp_server` e `configure_mcp_server_auth`.
 
 ## Primeiro uso (login)
 Cada pessoa autentica com a **propria conta**. Ao pedir a primeira acao (ex. "liste meus projetos na apipass"), a IA vai responder que voce precisa logar. Rode (ou peca para a IA rodar):
@@ -75,6 +75,7 @@ Abra a URL retornada no navegador, autorize no Keycloak da sua conta e volte ao 
 - **Construir fluxos**: "construa um fluxo que sincronize X com Y". A IA descobre as acoes (catalogo + acoes fixas), monta os passos e valida antes de salvar.
 - **Versionar e publicar**: salvar o development -> criar versao -> publicar no environment (com confirmacao).
 - **Testar**: rodar um teste do fluxo com um payload (com confirmacao).
+- **Expor fluxos para agentes de IA**: "crie um MCP Server com os fluxos de estoque e publique em homologacao". A IA cria o servidor, vincula os fluxos de trigger MCP Tool como ferramentas, publica por environment e devolve a URL de cada um (com confirmacao).
 - **Investigar execucoes**: listar logs, abrir uma execucao, ler o payload de um passo, ver resumos.
 - **Re-executar/parar** execucoes (com confirmacao explicita).
 
@@ -87,6 +88,7 @@ No Claude Code as skills viram comandos `/apipass-integrations:<skill>`; no Code
 Construcao de fluxos:
 - `/apipass-integrations:build-flow` — construir/alterar um fluxo de integracao (ponto de entrada)
 - `/apipass-integrations:build-agent-flow` — construir/alterar um fluxo de agente de IA (RAG, base de conhecimento)
+- `/apipass-integrations:build-mcp-server` — criar um MCP Server com fluxos como ferramentas e publica-lo por environment
 - `/apipass-integrations:research-action` — pesquisar uma acao do catalogo
 - `/apipass-integrations:create-action` — criar uma custom action a partir da doc de uma API
 

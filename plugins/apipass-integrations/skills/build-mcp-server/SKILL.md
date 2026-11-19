@@ -9,7 +9,7 @@ disable-model-invocation: false
 
 # Construir um MCP Server na APIPASS
 
-Um **MCP Server** e um recurso de projeto (ao lado dos fluxos). Cada **ferramenta** do servidor e o vinculo com um fluxo de trigger **MCP Tool**: chamar a ferramenta executa o fluxo, com os argumentos como payload (`{{$.trigger.*}}`), e devolve ao agente a resposta do step de fim. O servidor e publicado por environment, com uma URL propria em cada um.
+Um **MCP Server** e um recurso de projeto (ao lado dos fluxos). Cada **ferramenta** do servidor e o vinculo com um fluxo de trigger **MCP Tool**: chamar a ferramenta executa o fluxo, com os argumentos em `{{$.trigger.body.*}}`, e devolve ao agente o `body` da resposta do step de fim — que nesse trigger usa `status: "SUCCESS"`/`"ERROR"`, nunca codigo HTTP. O servidor e publicado por environment, com uma URL propria em cada um.
 
 Siga as etapas na ordem. Toda escrita exige `confirm: true` **e** a confirmacao do usuario.
 
@@ -26,7 +26,7 @@ Pergunte numa unica mensagem o que faltar:
 ## 2. Garantir os fluxos (trigger MCP Tool)
 So fluxos com trigger MCP Tool (`.trigger.mcp.McpToolTrigger`) podem virar ferramenta.
 - Ja existem? O servidor ainda nao existe na etapa 1, entao procure por `list_flows(projectId, triggerType: ".trigger.mcp.McpToolTrigger")`. Depois de criar o servidor, `list_mcp_server_eligible_flows(mcpServerId)` lista os elegiveis ainda nao vinculados.
-- Falta algum? Construa com a skill `build-flow` (secao "Trigger MCP Tool"): o `inputSchema` do trigger e o contrato que o agente usa para montar a chamada, e as anotacoes (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) dizem ao agente o risco de chamar a ferramenta.
+- Falta algum? Construa com a skill `build-flow` (secao "Trigger MCP Tool"): o `inputSchema` do trigger e o contrato que o agente usa para montar a chamada, e as anotacoes (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) dizem ao agente o risco de chamar a ferramenta. Os dois erros que mais quebram a ferramenta: ler os argumentos em `$.trigger.<campo>` em vez de `$.trigger.body.<campo>`, e usar codigo HTTP (`"200"`) no `status` da resposta do stop em vez de `SUCCESS` — com isso toda chamada volta como erro para o agente.
 - O fluxo precisa estar **publicado** em cada environment onde a ferramenta deve aparecer (`create_version` → `publish_flow`). Ferramenta cujo fluxo nao esta publicado no environment fica fora do `tools/list` dali.
 
 ## 3. Criar o servidor
@@ -55,6 +55,9 @@ Sem configuracao, o endpoint responde sem token. Para exigir token, `configure_m
 
 ## 7. Entregar
 Devolva ao usuario uma tabela por environment com a URL, as ferramentas disponiveis e as indisponiveis (com o motivo), e como conectar: a URL vai na configuracao de servidor MCP remoto (HTTP) do cliente; com autenticacao, o cliente envia `Authorization: Bearer <token>`.
+
+## Depurar uma chamada que falha
+Cada chamada de ferramenta e uma execucao do fluxo. Com o id da execucao que o agente recebeu no erro: `get_flow_execution_log(executionId)` (status da execucao), `list_step_execution_logs(flowExecutionId, page, pageSize)` (status por step) e `get_trigger_payload(flowExecutionId)` — o payload mostra `body` (os argumentos) e `caller` (servidor, ferramenta, credencial). Execucao `OK` com todos os steps `OK` e mesmo assim erro para o agente quase sempre e o `status` da resposta do stop diferente de `SUCCESS`.
 
 ## Mudancas depois de publicado — sempre avise antes
 **Nao existe rascunho.** Com o servidor publicado, toda alteracao que o agente enxerga vai **na hora** para todos os environments publicados, inclusive producao. A resposta de cada escrita traz `propagation.published` e `propagation.failed` — reporte as falhas (o environment com falha segue servindo o estado anterior; `publish_mcp_server` naquele environment republica).

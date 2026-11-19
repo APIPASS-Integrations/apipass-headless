@@ -111,7 +111,17 @@ Use quando o fluxo vai ser **ferramenta de um MCP Server** (um agente de IA cham
 - **`inputSchema`** (obrigatorio) — JSON Schema dos argumentos da ferramenta, como **string** (o editor grava o texto digitado; objeto tambem e aceito). A raiz precisa ser `"type": "object"`; sem `$schema` vale o draft 2020-12 (tambem aceita 2019-09 e draft-07). O `save_flow_development` recusa schema invalido. Ferramenta sem argumentos: `{"type":"object","properties":{}}`. E o contrato que o agente usa para montar a chamada: descreva cada propriedade (`description`) e marque as obrigatorias.
 - **Anotacoes** (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) — dizem ao agente o risco de chamar a ferramenta. Sem valor, o runtime assume o pior caso: `readOnlyHint: false`, `destructiveHint: true`, `idempotentHint: false`, `openWorldHint: true`. Uma consulta pura deve declarar `readOnlyHint: true` e `destructiveHint: false`.
 - **`description`** (opcional) — so documenta o fluxo para quem monta o servidor; **nao** vai para o agente. O texto que o agente ve e o `title`/`description` do vinculo com o servidor (skill `build-mcp-server`).
-- **Argumentos e resposta:** os argumentos da chamada chegam em `{{$.trigger.<campo>}}` (no NodeJS, `$.trigger.<campo>`), ja validados contra o `inputSchema` antes de o fluxo rodar. O agente recebe o corpo da resposta do step de fim (`responses[].responseData`), entao preencha `responses` como no trigger REST: uma resposta `default` para o caminho feliz e as de erro com `groups`. Execucao com erro ou uma resposta de erro do stop chegam ao agente como erro da ferramenta, com o id da execucao.
+- **Argumentos:** chegam em **`{{$.trigger.body.<campo>}}`** (no NodeJS, `$.trigger.body.<campo>`) — **nao** em `$.trigger.<campo>`, que resolve vazio sem erro. Ja vem validados contra o `inputSchema`: argumento obrigatorio ausente e recusado antes de o fluxo rodar. O trigger tambem expoe quem chamou em `$.trigger.caller`: `server` (`id` = Server ID, `name`, `environmentName`), `tool` (o `name` do vinculo), `credential` (`type`, `id`) e `user`.
+- **Resposta (step de fim):** o agente recebe o `body` da resposta escolhida do stop v2. Nesse trigger o **`responseData.status` e `SUCCESS` ou `ERROR`, nunca um codigo HTTP** (igual ao Child Flow). Qualquer valor diferente de `SUCCESS` — inclusive `"200"` — chega ao agente como **erro da ferramenta** (`isError`), mesmo com todos os steps `OK`. Monte uma resposta `default` com `status: "SUCCESS"` para o caminho feliz e as de erro com `status: "ERROR"` e `groups`. Execucao com erro, parada ou resposta `ERROR` chegam ao agente com o id da execucao e o `body` da resposta.
+```json
+"responses": [
+  { "description": "Default", "default": true, "groups": [],
+    "responseData": { "status": "SUCCESS", "contentType": "application/json", "headers": [], "body": "{{$.a0.body}}" } },
+  { "description": "Erro",
+    "responseData": { "status": "ERROR", "contentType": "application/json", "headers": [], "body": "{{$.a0.body}}" },
+    "groups": [ { "rules": [ { "input": "{{$.flowExecution.status}}", "condition": "TEXT_DOES_NOT_MATCH", "expected": "OK" } ] } ] }
+]
+```
 - **Tempo de espera:** a chamada espera o fluxo terminar ate um limite da plataforma (igual para todas as ferramentas); se estourar, o agente recebe erro com o id da execucao e o fluxo **continua** rodando. Mantenha o fluxo curto — processamento longo deve ir para fila (AMS) ou subfluxo assincrono.
 - **Trocar o trigger** de um fluxo que ja e ferramenta (ou arquivar o fluxo) desfaz o vinculo com os servidores e descarta o nome da ferramenta — confira antes com `list_flow_mcp_servers(flowId)`.
 

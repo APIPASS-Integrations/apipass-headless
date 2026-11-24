@@ -223,6 +223,7 @@ Extrair queries dos campos `rawData`/`inputData` dos steps SQL para análise est
 | S6 | Response de erro sem mensagem amigável ao usuário | Status 4xx/5xx no Stop sem campo `message` descritivo |
 | S7 | Operações de escrita sem auditoria | INSERT/UPDATE/DELETE, email ou SMS sem nenhum step de registro de auditoria |
 | S8 | Fluxo async sem mecanismo de status/callback | Retorna 202 Accepted mas sem webhook de retorno, polling ou persistência de estado |
+| S9 | Fluxo sem métrica customizada para evento de negócio relevante | Fluxo processa pedidos, transações ou outro evento de negócio claro (valor monetário, quantidade, status de aprovação) mas não emite nenhuma métrica `flow_custom_*` (steps `COUNT`/`RATE`/`GAUGE`/`HISTOGRAM`/`SET`, ver skill `apipass-patterns` seção "Métricas customizadas") além das built-in automáticas — sugerir rodar a skill `suggest-metrics` neste fluxo |
 
 ---
 

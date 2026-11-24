@@ -381,6 +381,9 @@ Ao reconstruir ou **portar** um fluxo para OUTRA conta, lembre que custom action
 ## 4. Validacao (automatica no save)
 O `save_flow_development` valida ANTES de enviar e bloqueia em caso de erro (ids duplicados, `id`/`type` vazios). Corrija os erros listados e tente de novo. Campos obrigatorios com default seguro sao preenchidos automaticamente — confira os avisos.
 
+## 4a. Metricas antes de versionar (opcional)
+Antes de criar a versao, pare e avalie se o fluxo tem eventos de negocio que merecem observabilidade propria — algo que as metricas built-in automaticas (`flow_executed_total`, `flow_success_total`, `flow_errors_total`, `flow_duration_milliseconds`, etc.) nao capturam (ex.: quantos pedidos foram sincronizados, o valor de uma transacao, o tamanho de uma fila interna). Esses casos sao candidatos aos 5 conectores de metrica customizavel (`COUNT`/`RATE`/`GAUGE`/`HISTOGRAM`/`SET`, skill `apipass-patterns` secao "Metricas customizadas"). Em vez de descobrir manualmente cada candidato, rode a skill `suggest-metrics` apontando para este fluxo — ela devolve sugestoes de metrica (tipo, `value`, tags, apos qual step inserir e a pergunta de negocio que responde) que voce aplica com `save_flow_development` mediante confirmacao do usuario. Opcional e nao bloqueia o `create_version`/`publish_flow` a seguir.
+
 ## 4b. Versionar e publicar (cadeia)
 A publicacao depende de uma versao, e a versao depende do save. Ordem:
 1. `save_flow_development(...)` — grava os steps.
@@ -409,6 +412,8 @@ Apos publicar/rodar, analise logs (ver a skill `apipass-gotchas`): `list_flow_ex
 - skill `research-action` — pesquisar uma acao do catalogo
 - skill `create-action` — criar uma custom action a partir de doc de API
 - skill `apipass-actions` — anatomia do FlowStep e catalogo
-- skill `apipass-patterns` — estrutura do fluxo, contadores, publicacao
+- skill `apipass-patterns` — estrutura do fluxo, contadores, publicacao, metricas customizadas
 - skill `apipass-gotchas` — erros comuns e debug de execucao
 - skill `set-account` — definir a conta/realm
+- skill `suggest-metrics` — sugerir metricas customizadas de negocio para o fluxo
+- skill `build-dashboard` — montar uma dashboard do Monitor com as metricas do fluxo

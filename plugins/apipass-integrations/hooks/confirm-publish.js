@@ -5,7 +5,9 @@
  * Forca uma confirmacao explicita do usuario antes de qualquer operacao com
  * efeito real sobre um environment: publicar, despublicar ou executar um fluxo de
  * teste, e publicar, despublicar ou trocar a autenticacao de um MCP Server (o que
- * muda o que os agentes enxergam na hora).
+ * muda o que os agentes enxergam na hora). Cobre tambem as duas operacoes
+ * destrutivas e irreversiveis de dashboards do Monitor: apagar uma dashboard
+ * inteira ou um widget.
  *
  * Formatos suportados:
  *   (padrao)   Claude Code, GitHub Copilot CLI e VS Code (formato de hook do Claude):
@@ -32,6 +34,8 @@ const OPERACOES = {
   unpublish_mcp_server: 'DESPUBLICAR o MCP Server do environment (agentes que usam a URL deixam de funcionar)',
   publish_mcp_server: 'PUBLICAR o MCP Server no environment (as ferramentas ficam disponiveis para agentes)',
   configure_mcp_server_auth: 'TROCAR a autenticacao do MCP Server (vale na hora em todos os environments publicados)',
+  delete_dashboard: 'APAGAR a dashboard do Monitor e todos os seus widgets (irreversivel — prefira arquivar)',
+  delete_widget: 'APAGAR o widget da dashboard do Monitor (irreversivel)',
 };
 
 const isCursor = process.argv.includes('--cursor');
@@ -51,7 +55,11 @@ function montarRazao(key, input) {
   const environmentId = input.environmentId || input.stageId;
   if (environmentId) alvo.push(`environment ${environmentId}`);
   if (input.historyId) alvo.push(`versao ${input.historyId}`);
+  if (input.dashboardId) alvo.push(`dashboard ${input.dashboardId}`);
+  if (input.widgetId) alvo.push(`widget ${input.widgetId}`);
   const detalhe = alvo.length ? ` (${alvo.join(', ')})` : '';
+  if (input.widgetId) return `Confirmacao obrigatoria: prestes a ${acao}${detalhe}. Aprove apenas se o widget estiver correto — a exclusao nao pode ser desfeita.`;
+  if (input.dashboardId) return `Confirmacao obrigatoria: prestes a ${acao}${detalhe}. Aprove apenas se a dashboard estiver correta — a exclusao nao pode ser desfeita.`;
   return `Confirmacao obrigatoria: prestes a ${acao}${detalhe}. Aprove apenas se o environment e o ${input.mcpServerId ? 'MCP Server' : 'fluxo'} estiverem corretos.`;
 }
 

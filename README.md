@@ -78,6 +78,7 @@ Abra a URL retornada no navegador, autorize no Keycloak da sua conta e volte ao 
 - **Expor fluxos para agentes de IA**: "crie um MCP Server com os fluxos de estoque e publique em homologacao". A IA cria o servidor, vincula os fluxos de trigger MCP Tool como ferramentas, publica por environment e devolve a URL de cada um (com confirmacao).
 - **Investigar execucoes**: listar logs, abrir uma execucao, ler o payload de um passo, ver resumos.
 - **Re-executar/parar** execucoes (com confirmacao explicita).
+- **Medir e visualizar o negocio**: sugerir metricas customizadas para um fluxo/projeto, montar uma dashboard no Monitor com os widgets certos e analisa-la comparando com o periodo anterior.
 
 Operacoes com efeito real (criar/salvar/publicar/testar/retry/stop) sempre pedem confirmacao antes.
 
@@ -92,10 +93,15 @@ Construcao de fluxos:
 - `/apipass-integrations:research-action` — pesquisar uma acao do catalogo
 - `/apipass-integrations:create-action` — criar uma custom action a partir da doc de uma API
 
+Observabilidade (Monitor):
+- `/apipass-integrations:suggest-metrics` — sugerir metricas customizadas de negocio para um fluxo ou projeto
+- `/apipass-integrations:build-dashboard` — montar uma dashboard do Monitor com os widgets certos
+- `/apipass-integrations:analyze-dashboard` — analisar uma dashboard e gerar relatorio comparando com o periodo anterior
+
 Referencia:
 - `/apipass-integrations:apipass-actions` — catalogo + anatomia do FlowStep
 - `/apipass-integrations:apipass-agent-actions` — catalogo de acoes de IA (Agent Builder)
-- `/apipass-integrations:apipass-patterns` — estrutura, versionar, publicar, testar
+- `/apipass-integrations:apipass-patterns` — estrutura, versionar, publicar, testar, metricas customizadas
 - `/apipass-integrations:apipass-gotchas` — erros comuns e debug de execucao
 
 Analise e manutencao:

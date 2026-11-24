@@ -1,6 +1,6 @@
 {
   "name": "apipass-integrations",
-  "version": "0.20.2",
+  "version": "0.21.0",
   "description": "APIPASS Headless para Codex — construa, execute e valide integracoes da APIPASS em linguagem natural. Pesquise acoes, configure autenticacao e analise logs de execucao sem sair do seu IDE com IA.",
   "author": {
     "name": "APIPASS",
@@ -41,6 +41,12 @@
           "approval_mode": "prompt"
         },
         "configure_mcp_server_auth": {
+          "approval_mode": "prompt"
+        },
+        "delete_dashboard": {
+          "approval_mode": "prompt"
+        },
+        "delete_widget": {
           "approval_mode": "prompt"
         }
       }

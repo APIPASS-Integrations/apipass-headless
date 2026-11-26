@@ -58,8 +58,13 @@ function montarRazao(key, input) {
   if (input.dashboardId) alvo.push(`dashboard ${input.dashboardId}`);
   if (input.widgetId) alvo.push(`widget ${input.widgetId}`);
   const detalhe = alvo.length ? ` (${alvo.join(', ')})` : '';
-  if (input.widgetId) return `Confirmacao obrigatoria: prestes a ${acao}${detalhe}. Aprove apenas se o widget estiver correto — a exclusao nao pode ser desfeita.`;
-  if (input.dashboardId) return `Confirmacao obrigatoria: prestes a ${acao}${detalhe}. Aprove apenas se a dashboard estiver correta — a exclusao nao pode ser desfeita.`;
+  // A frase final segue da OPERACAO detectada (key), nunca da presenca de um
+  // campo no input — senao um delete_dashboard/delete_widget sem dashboardId/
+  // widgetId (nome de campo diferente, ou input que virou {} por falha de
+  // parse) cairia no aviso generico de fluxo/environment, perdendo o "nao pode
+  // ser desfeita".
+  if (key === 'delete_widget') return `Confirmacao obrigatoria: prestes a ${acao}${detalhe}. Aprove apenas se o widget estiver correto — a exclusao nao pode ser desfeita.`;
+  if (key === 'delete_dashboard') return `Confirmacao obrigatoria: prestes a ${acao}${detalhe}. Aprove apenas se a dashboard estiver correta — a exclusao nao pode ser desfeita.`;
   return `Confirmacao obrigatoria: prestes a ${acao}${detalhe}. Aprove apenas se o environment e o ${input.mcpServerId ? 'MCP Server' : 'fluxo'} estiverem corretos.`;
 }
 
@@ -122,6 +127,12 @@ process.stdin.on('end', () => {
   if (isCursor) {
     const server = String(evt.mcp_server_name || '');
     if (server && !server.toLowerCase().includes('apipass')) return seguir();
+  } else if (!toolName.toLowerCase().includes('apipass')) {
+    // VS Code ignora o matcher do hooks.json e roda o hook para TODA tool; sem
+    // o filtro aqui, uma tool de OUTRO servidor MCP com o mesmo sufixo (ex. um
+    // "delete_dashboard" de um Grafana/Datadog) seria confirmada como se fosse
+    // do Monitor da APIPASS.
+    return seguir();
   }
 
   const key = operacaoDe(toolName);

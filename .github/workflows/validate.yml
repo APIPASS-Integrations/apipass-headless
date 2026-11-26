@@ -33,7 +33,14 @@ jobs:
           test -z "$out"
           out=$(echo '{"tool_name":"mcp__apipass__delete_dashboard","tool_input":{"dashboardId":"d"}}' | node plugins/apipass-integrations/hooks/confirm-publish.js)
           echo "$out" | grep -q '"permissionDecision":"ask"'
+          echo "$out" | grep -q 'dashboard d'
           out=$(echo '{"tool_name":"mcp__apipass__delete_widget","tool_input":{"dashboardId":"d","widgetId":"w"}}' | node plugins/apipass-integrations/hooks/confirm-publish.js)
           echo "$out" | grep -q '"permissionDecision":"ask"'
-          out=$(echo '{"tool_name":"delete_dashboard","tool_input":"{}","mcp_server_name":"apipass"}' | node plugins/apipass-integrations/hooks/confirm-publish.js --cursor)
+          echo "$out" | grep -q 'widget w'
+          out=$(echo '{"tool_name":"delete_dashboard","tool_input":"{\"dashboardId\":\"d\"}","mcp_server_name":"apipass"}' | node plugins/apipass-integrations/hooks/confirm-publish.js --cursor)
           echo "$out" | grep -q '"permission":"ask"'
+          echo "$out" | grep -q 'dashboard d'
+          out=$(echo '{"tool_name":"mcp__apipass__archive_dashboard","tool_input":{"dashboardId":"d"}}' | node plugins/apipass-integrations/hooks/confirm-publish.js)
+          test -z "$out"
+          out=$(echo '{"tool_name":"mcp__grafana__delete_dashboard","tool_input":{"dashboardId":"d"}}' | node plugins/apipass-integrations/hooks/confirm-publish.js)
+          test -z "$out"

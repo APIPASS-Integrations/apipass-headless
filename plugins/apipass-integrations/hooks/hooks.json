@@ -2,7 +2,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": ".*(publish_flow|unpublish_flow|run_test_flow|publish_mcp_server|unpublish_mcp_server|configure_mcp_server_auth)$",
+        "matcher": ".*apipass.*(publish_flow|unpublish_flow|run_test_flow|publish_mcp_server|unpublish_mcp_server|configure_mcp_server_auth|delete_dashboard|delete_widget)$",
         "hooks": [
           {
             "type": "command",

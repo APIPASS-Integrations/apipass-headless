@@ -491,3 +491,67 @@ Quando um fluxo faz varias chamadas HTTP em sequencia (ex. 4 consultas a um cata
 ```
 
 Mantenha o step de erro (ex. `a6`, um NodeJS que monta a mensagem) lendo cada chamada diretamente (`$.a1`, `$.a2`, ...) para o diagnostico detalhado — ele nao depende de qual switch roteou para ele, entao continua funcionando igual mesmo depois de remover os switches individuais.
+
+---
+
+## Metricas customizadas — COUNT, RATE, GAUGE, HISTOGRAM, SET
+
+Alem das metricas built-in (automaticas, por fluxo: `flow_executed_total`, `flow_success_total`, `flow_errors_total`, `flow_duration_milliseconds`, `flow_concurrent_executions`, `flow_throughput_total`), o catalogo tem **5 conectores de metrica customizavel** para eventos de **negocio** que as built-in nao cobrem (ex.: pedidos sincronizados, tamanho atual de uma fila interna, valor de uma transacao, clientes distintos atendidos no dia). Confirme o `actionId`/`coreRouteType` exato de cada um via `get_action(groupId, id)` antes de montar o step — nunca invente (mesma regra de qualquer acao do catalogo).
+
+| Tipo | Quando usar | `value` | Vira no Prometheus |
+|---|---|---|---|
+| **COUNT** | Contar ocorrencias de um evento de negocio (ex. "pedido sincronizado") | Opcional — em branco incrementa 1; numerico incrementa por esse valor (ex. tamanho de um lote) | `flow_custom_<nome>_total` (counter) |
+| **RATE** | Vazao — quantidade processada por chamada (ex. "itens processados neste lote") | Obrigatorio, numerico | `flow_custom_<nome>_total` (counter; some com `rate()`/`increase()` no PromQL, igual COUNT) |
+| **GAUGE** | Valor atual/absoluto no instante da emissao (ex. "tamanho da fila interna agora", "saldo disponivel") — cada emissao SUBSTITUI o valor anterior, nao acumula | Obrigatorio, numerico | `flow_custom_<nome>` (gauge, sem sufixo) |
+| **HISTOGRAM** | Distribuicao de valores/latencias de negocio (ex. "valor do pedido", "tempo de aprovacao manual") — quando a distribuicao importa mais que o total | Obrigatorio, numerico | `flow_custom_<nome>_bucket_total` / `_sum_total` / `_count_total` (como `flow_duration_milliseconds`) |
+| **SET** | Cardinalidade de valores unicos (ex. "clientes distintos atendidos hoje") — cada valor novo incrementa a cardinalidade; valor repetido nao conta de novo | Obrigatorio, texto (o proprio membro do conjunto, nao precisa ser numerico) | `flow_custom_<nome>` (gauge da cardinalidade, sem sufixo) |
+
+> **Nao duplique as metricas built-in.** Taxa de sucesso/erro, duracao e execucoes concorrentes do fluxo ja sao automaticas (`flow_executed_total`, `flow_duration_milliseconds`, etc.) — nao recrie com um COUNT/HISTOGRAM customizado. Metrica customizada e para o que so o negocio sabe (o fluxo processou um pedido de qual valor, uma fila interna chegou a qual tamanho), nao para redescrever execucao/erro/latencia do proprio fluxo.
+
+### Shape do step
+Acao de catalogo (`.service.actions.Action`), como qualquer outra — `actionId`/`coreRouteType` iguais ao tipo (`COUNT`, `RATE`, `GAUGE`, `HISTOGRAM` ou `SET`):
+```json
+{
+  "id": "a6",
+  "label": "Conta pedido sincronizado",
+  "type": ".service.actions.Action",
+  "actionId": "COUNT",
+  "coreRouteType": "COUNT",
+  "image": "https://s3.amazonaws.com/flow-manager-api-prd/actions/logo/COUNT.png",
+  "additionalConfiguration": true,
+  "failOnError": false,
+  "inputData": {
+    "metricName": "pedido_sincronizado",
+    "value": "",
+    "tags": [
+      { "key": "canal", "value": "{{$.trigger.body.canal}}" }
+    ]
+  },
+  "nextSteps": [{ "id": "a7", "type": "...", "sourceUUID": "integration-step-uuid-sourceEndpoint-a6", "targetUUID": "integration-step-uuid-targetEndpoint-a7" }]
+}
+```
+- `metricName`, `value` e cada `tags[].value` aceitam interpolacao mustache (`{{$.aN.body.campo}}`), igual qualquer outro campo de step.
+- **`tags[]` usa `key`/`value`** — **NAO** `label`/`value` (isso e o formato dos `headers` do step HTTP; confundir os dois e aceito silenciosamente no save, mas a tag nunca chega na metrica). Cada item vira uma label do Prometheus.
+- `failOnError: false` e o recomendado: uma falha ao emitir metrica (ex. nome invalido) nao deveria derrubar o fluxo de negocio.
+
+### Convencao de nome e tags
+- **`metricName`**: snake_case, estavel, descrevendo o evento de negocio (ex. `pedido_sincronizado`, `fila_interna_tamanho`, `cliente_atendido`). **Nunca renomeie uma metrica ja em producao** — quebra a serie historica e qualquer dashboard/alerta que a referencie; crie uma nova em vez de renomear.
+- **Nome final no Prometheus/OTel**: sempre `flow_custom_<metricName>` (prefixo fixo, nao configuravel) — e o que aparece em `list_metric_options`/`list_dimension_values` e nas queries de widget (skills `build-dashboard`/`analyze-dashboard`).
+- **Tags de baixa cardinalidade, sempre.** Nunca use como valor de tag algo com cardinalidade alta/ilimitada — id de execucao, email, CPF/CNPJ, payload bruto, timestamp, UUID gerado por requisicao. Cada combinacao unica de valores de tag vira uma serie nova no Prometheus; cardinalidade alta explode o numero de series (custo e performance de query). Prefira categorias/enums fechados (`canal`, `tipo_documento`, `status_negocio`, `regiao`) — se o valor pode ser "quase unico" por execucao, nao e tag, e no maximo o `value` de um HISTOGRAM/SET.
+
+### Tags reservadas — descartadas em silencio
+As dimensoes obrigatorias que a plataforma ja injeta (as mesmas de `flow_executed_total` e das demais built-in) **nunca podem ser sobrescritas** por uma tag do usuario — se `tags[]` incluir uma chave reservada, ela e **silenciosamente ignorada** (sem erro, sem aviso):
+```
+account_id, tenant_id, flow_engine_id, project_id, project_name,
+flow_id, flow_name, environment_id, environment_name, trigger_type,
+step_id, step_type, le
+```
+(`le` e a tag de limite de bucket dos histogramas — reservada mesmo fora de um HISTOGRAM customizado.) Nao tente usar uma tag chamada `flow_id`/`status`/etc. esperando sobrescrever o valor da plataforma; escolha outro nome.
+
+### Onde posicionar o step no fluxo
+Logo **apos** o step que determina o evento/valor de negocio a medir, antes de seguir para o proximo passo (ou para o Stop) — nunca antes, senao o `value`/tags interpolados ainda nao existem:
+- COUNT de "pedido sincronizado": depois do step que confirma a sincronizacao (ex. resposta 2xx do ERP/CRM), nao antes da chamada.
+- GAUGE de "tamanho da fila": depois de consultar o tamanho atual (ex. um `AOS_FIND_ONE_BY_QUERY`/HTTP que devolve a contagem).
+- HISTOGRAM de "valor do pedido": depois de o valor ser conhecido (ex. apos o parse do payload ou a resposta do ERP).
+- Dentro de um `LoopCanvas` (por item) ou de um branch de `SwitchUtility` (por caminho de negocio) sao posicoes validas — a metrica herda `step_id`/`step_type` do proprio step de metrica, nao do step anterior.
+- Use `failOnError: false` (ver acima) para a metrica nunca ser o motivo de o fluxo falhar.

@@ -496,17 +496,17 @@ Mantenha o step de erro (ex. `a6`, um NodeJS que monta a mensagem) lendo cada ch
 
 ## Metricas customizadas — COUNT, RATE, GAUGE, HISTOGRAM, SET
 
-Alem das metricas built-in (automaticas, por fluxo: `flow_executed_total`, `flow_success_total`, `flow_errors_total`, `flow_duration_milliseconds`, `flow_concurrent_executions`, `flow_throughput_total`), o catalogo tem **5 conectores de metrica customizavel** para eventos de **negocio** que as built-in nao cobrem (ex.: pedidos sincronizados, tamanho atual de uma fila interna, valor de uma transacao, clientes distintos atendidos no dia). Confirme o `actionId`/`coreRouteType` exato de cada um via `get_action(groupId, id)` antes de montar o step — nunca invente (mesma regra de qualquer acao do catalogo).
+Alem das metricas built-in (automaticas, por fluxo: `flow_executed`, `flow_success`, `flow_errors`, `flow_duration_milliseconds`, `flow_concurrent_executions`, `flow_throughput`), o catalogo tem **5 conectores de metrica customizavel** para eventos de **negocio** que as built-in nao cobrem (ex.: pedidos sincronizados, tamanho atual de uma fila interna, valor de uma transacao, clientes distintos atendidos no dia). Confirme o `actionId`/`coreRouteType` exato de cada um via `get_action(groupId, id)` antes de montar o step — nunca invente (mesma regra de qualquer acao do catalogo).
 
 | Tipo | Quando usar | `value` | Vira no Prometheus |
 |---|---|---|---|
-| **COUNT** | Contar ocorrencias de um evento de negocio (ex. "pedido sincronizado") | Opcional — em branco incrementa 1; numerico incrementa por esse valor (ex. tamanho de um lote) | `flow_custom_<nome>_total` (counter) |
-| **RATE** | Vazao — quantidade processada por chamada (ex. "itens processados neste lote") | Obrigatorio, numerico | `flow_custom_<nome>_total` (counter; some com `rate()`/`increase()` no PromQL, igual COUNT) |
+| **COUNT** | Contar ocorrencias de um evento de negocio (ex. "pedido sincronizado") | Opcional — em branco incrementa 1; numerico incrementa por esse valor (ex. tamanho de um lote) | `flow_custom_<nome>` (counter, sem sufixo `_total` — o catalogo e as queries do Monitor usam o nome exatamente como emitido) |
+| **RATE** | Vazao — quantidade processada por chamada (ex. "itens processados neste lote") | Obrigatorio, numerico | `flow_custom_<nome>` (counter, sem sufixo; some com `rate()`/`increase()` no PromQL, igual COUNT) |
 | **GAUGE** | Valor atual/absoluto no instante da emissao (ex. "tamanho da fila interna agora", "saldo disponivel") — cada emissao SUBSTITUI o valor anterior, nao acumula | Obrigatorio, numerico | `flow_custom_<nome>` (gauge, sem sufixo) |
-| **HISTOGRAM** | Distribuicao de valores/latencias de negocio (ex. "valor do pedido", "tempo de aprovacao manual") — quando a distribuicao importa mais que o total | Obrigatorio, numerico | `flow_custom_<nome>_bucket_total` / `_sum_total` / `_count_total` (como `flow_duration_milliseconds`) |
+| **HISTOGRAM** | Distribuicao de valores/latencias de negocio (ex. "valor do pedido", "tempo de aprovacao manual") — quando a distribuicao importa mais que o total | Obrigatorio, numerico | `flow_custom_<nome>_bucket` / `_sum` / `_count` (como `flow_duration_milliseconds`; o catalogo tambem expoe `_max`) |
 | **SET** | Cardinalidade de valores unicos (ex. "clientes distintos atendidos hoje") — cada valor novo incrementa a cardinalidade; valor repetido nao conta de novo | Obrigatorio, texto (o proprio membro do conjunto, nao precisa ser numerico) | `flow_custom_<nome>` (gauge da cardinalidade, sem sufixo) |
 
-> **Nao duplique as metricas built-in.** Taxa de sucesso/erro, duracao e execucoes concorrentes do fluxo ja sao automaticas (`flow_executed_total`, `flow_duration_milliseconds`, etc.) — nao recrie com um COUNT/HISTOGRAM customizado. Metrica customizada e para o que so o negocio sabe (o fluxo processou um pedido de qual valor, uma fila interna chegou a qual tamanho), nao para redescrever execucao/erro/latencia do proprio fluxo.
+> **Nao duplique as metricas built-in.** Taxa de sucesso/erro, duracao e execucoes concorrentes do fluxo ja sao automaticas (`flow_executed`, `flow_duration_milliseconds`, etc.) — nao recrie com um COUNT/HISTOGRAM customizado. Metrica customizada e para o que so o negocio sabe (o fluxo processou um pedido de qual valor, uma fila interna chegou a qual tamanho), nao para redescrever execucao/erro/latencia do proprio fluxo.
 
 ### Shape do step
 Acao de catalogo (`.service.actions.Action`), como qualquer outra — `actionId`/`coreRouteType` iguais ao tipo (`COUNT`, `RATE`, `GAUGE`, `HISTOGRAM` ou `SET`):
@@ -540,7 +540,7 @@ Acao de catalogo (`.service.actions.Action`), como qualquer outra — `actionId`
 - **Tags de baixa cardinalidade, sempre.** Nunca use como valor de tag algo com cardinalidade alta/ilimitada — id de execucao, email, CPF/CNPJ, payload bruto, timestamp, UUID gerado por requisicao. Cada combinacao unica de valores de tag vira uma serie nova no Prometheus; cardinalidade alta explode o numero de series (custo e performance de query). Prefira categorias/enums fechados (`canal`, `tipo_documento`, `status_negocio`, `regiao`) — se o valor pode ser "quase unico" por execucao, nao e tag, e no maximo o `value` de um HISTOGRAM/SET.
 
 ### Tags reservadas — descartadas em silencio
-As dimensoes obrigatorias que a plataforma ja injeta (as mesmas de `flow_executed_total` e das demais built-in) **nunca podem ser sobrescritas** por uma tag do usuario — se `tags[]` incluir uma chave reservada, ela e **silenciosamente ignorada** (sem erro, sem aviso):
+As dimensoes obrigatorias que a plataforma ja injeta (as mesmas de `flow_executed` e das demais built-in) **nunca podem ser sobrescritas** por uma tag do usuario — se `tags[]` incluir uma chave reservada, ela e **silenciosamente ignorada** (sem erro, sem aviso):
 ```
 account_id, tenant_id, flow_engine_id, project_id, project_name,
 flow_id, flow_name, environment_id, environment_name, trigger_type,

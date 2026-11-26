@@ -48,7 +48,7 @@ Ao final, se alguma metrica foi aplicada, pergunte se o usuario quer montar uma 
 ## Principios
 - Nunca aplique uma metrica sem a aprovacao explicita do usuario.
 - Nao invente `actionId`/`coreRouteType`/shape de tags — siga a skill `apipass-patterns`.
-- Metrica de negocio, nao tecnica: eventos ja cobertos pelas built-in (`flow_executed_total` etc.) nao viram sugestao.
+- Metrica de negocio, nao tecnica: eventos ja cobertos pelas built-in (`flow_executed` etc.) nao viram sugestao.
 - Projeto inteiro pode gerar muitas sugestoes — priorize clareza (agrupe por fluxo) em vez de uma lista unica longa.
 
 ## Skills relacionadas

@@ -1,5 +1,9 @@
 # Changelog — apipass-integrations
 
+## 0.21.1
+### Corrigido
+- **Nomes de metrica documentados com sufixo `_total` indevido** (`apipass-patterns`, `build-dashboard`, `suggest-metrics`, `build-flow`, agentes `apipass-metrics-advisor`/`apipass-widget-builder`) — as metricas built-in (`flow_executed`, `flow_success`, `flow_errors`, `flow_throughput`) e as customizadas COUNT/RATE (`flow_custom_<nome>`) e HISTOGRAM (`flow_custom_<nome>_bucket`/`_sum`/`_count`) **nao levam** o sufixo `_total` que o Counter do Micrometer registra internamente — o catalogo (`list_metric_options`) e as queries do Monitor usam o nome ja sem esse sufixo. Confirmado testando ao vivo no Monitor (consulta a `flow_executed` retorna dado; a `flow_executed_total` nao retorna nada). O fix anterior do CONSOLE-2054 (review do PR #31) tinha adicionado esse sufixo com base no codigo-fonte do `core-route`, sem validar contra o comportamento real do catalogo/consulta.
+
 ## 0.21.0
 ### Adicionado
 - **Skills `suggest-metrics`, `build-dashboard` e `analyze-dashboard`** (CONSOLE-2054) — o ciclo completo de observabilidade de negocio sobre a aba Monitor, usando as tools de dashboards/widgets do servidor MCP 0.13.1:

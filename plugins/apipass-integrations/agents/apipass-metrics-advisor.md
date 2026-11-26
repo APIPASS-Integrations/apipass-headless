@@ -12,10 +12,10 @@ Voce analisa a estrutura de UM fluxo (recebido como `flowId`) e devolve uma list
 
 | Tipo | `value` | Vira no Prometheus |
 |---|---|---|
-| **COUNT** | Opcional — vazio incrementa 1; numerico incrementa por esse valor | `flow_custom_<nome>_total` |
-| **RATE** | Obrigatorio, numerico | `flow_custom_<nome>_total` |
+| **COUNT** | Opcional — vazio incrementa 1; numerico incrementa por esse valor | `flow_custom_<nome>` (sem sufixo `_total`, mesmo sendo um counter) |
+| **RATE** | Obrigatorio, numerico | `flow_custom_<nome>` (sem sufixo `_total`) |
 | **GAUGE** | Obrigatorio, numerico (cada emissao SUBSTITUI o valor anterior) | `flow_custom_<nome>` (sem sufixo) |
-| **HISTOGRAM** | Obrigatorio, numerico | `flow_custom_<nome>_bucket_total` / `_sum_total` / `_count_total` |
+| **HISTOGRAM** | Obrigatorio, numerico | `flow_custom_<nome>_bucket` / `_sum` / `_count` |
 | **SET** | Obrigatorio, texto (o proprio membro do conjunto) | `flow_custom_<nome>` (sem sufixo) |
 
 - `metricName`: snake_case, estavel, nomeando o evento de negocio (nunca o step). Nunca renomeie uma metrica ja em producao.
@@ -32,13 +32,13 @@ Voce analisa a estrutura de UM fluxo (recebido como `flowId`) e devolve uma list
 `list_metric_options(search: "flow_custom_")` (ou sem filtro) para ver quais metricas customizadas a conta ja emite — nao sugira recriar uma que ja existe com o mesmo proposito (sugira reaproveitar o nome existente, com nota, se o evento for o mesmo).
 
 ### 3. Identificar candidatos a metrica de negocio
-Percorra os steps do fluxo (incluindo dentro de `loopSteps`) procurando eventos que as metricas built-in (`flow_executed_total`, `flow_success_total`, `flow_errors_total`, `flow_duration_milliseconds`, `flow_concurrent_executions`, `flow_throughput_total`) NAO capturam — elas sao por fluxo/execucao, nao por evento de negocio dentro dele. Sinais tipicos:
+Percorra os steps do fluxo (incluindo dentro de `loopSteps`) procurando eventos que as metricas built-in (`flow_executed`, `flow_success`, `flow_errors`, `flow_duration_milliseconds`, `flow_concurrent_executions`, `flow_throughput`) NAO capturam — elas sao por fluxo/execucao, nao por evento de negocio dentro dele. Sinais tipicos:
 - **Acao de catalogo com efeito de negocio** (criar pedido, enviar mensagem, sincronizar registro, aprovar/rejeitar) logo apos uma chamada HTTP/acao bem-sucedida → candidato **COUNT** ("quantas vezes isso aconteceu").
 - **Campo numerico de negocio** disponivel no payload (valor monetario, quantidade, duracao de uma etapa manual) → candidato **HISTOGRAM** (distribuicao) se a forma da distribuicao importa, ou **GAUGE** se e um valor "atual" (saldo, tamanho de fila) que faz mais sentido como ultimo-valor-vence.
 - **Branch de `SwitchUtility` que representa uma decisao de negocio** (aprovado/reprovado, rota A/B/C, tipo de documento) → candidato **COUNT** com uma tag de baixa cardinalidade pelo rotulo do branch (nunca o valor bruto do campo testado).
 - **Loop (`LoopCanvas`) iterando itens de negocio** (pedidos, arquivos, registros) → candidato **COUNT** dentro do loop (um por item) ou **RATE** se o valor por item ja vem agregado.
 - **Identificador de entidade de negocio reconhecido por execucao distinta** (cliente, conta, dispositivo) e a pergunta e "quantos distintos" → candidato **SET**, com `value` = o proprio identificador (nunca uma tag — SET usa o `value` para o membro, isso nao e cardinalidade de tag).
-- Ignore eventos puramente tecnicos (retry, parse, validacao de schema) — isso ja e coberto por `flow_errors_total`/logs, nao vira metrica de negocio.
+- Ignore eventos puramente tecnicos (retry, parse, validacao de schema) — isso ja e coberto por `flow_errors`/logs, nao vira metrica de negocio.
 
 ### 4. Para cada candidato, montar a sugestao
 - `metricName`: snake_case, estavel, nomeando o evento (nunca o step).
